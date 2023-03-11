@@ -3,3 +3,6 @@ Cargo.lock
 /logs*
 /img*
 *log*
+**/install
+**/build
+**/devel
