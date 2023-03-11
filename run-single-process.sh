@@ -28,38 +28,29 @@ TS=$(date +%Y%m%d.%H%M%S)
 
 N_CPU=$(nproc)
 
-CHAIN_LENGTH=1
-BIN_DIR="./target/release/examples"
-ROS_BIN_DIR="./comparison/ros/eval-ws/build"
-# CYCLONEDDS_URI="./comparison/cyclonedds/cyclonedds.xml"
+BIN_DIR="./target/release"
+ROS_BIN_DIR="./ros/eval-ws/build"
 
 WD=$(pwd)
 
-LAT_FLUME="lat-flume"
-LAT_LINK="lat-link"
-LAT_SRC_SNK_STATIC="lat-source-sink-static"
-LAT_SRC_OP_STATIC="lat-source-op-static"
-LAT_SRC_SNK_DYNAMIC="lat-source-sink-dynamic"
-LAT_SRC_OP_DYNAMIC="lat-source-op-dynamic"
-LAT_ZENOH="lat-zenoh"
-LAT_STATIC="lat-static"
-LAT_DYNAMIC="lat-dynamic"
-PP_ZENOH="ping-pong-zenoh"
-PP_STATIC="ping-pong-static"
+ZENOH_PONG="zenoh_pong"
+ZENOH_PING="zenoh_ping"
+KAFKA_PONG="kafka_pong"
+KAFKA_PING="kafka_ping"
 
-CDDS_COMPARISON_DIR="./comparison/cyclonedds/ping-pong/build"
-ROS2_COMPARISON_DIR="./comparison/ros2/eval-ws"
+ROS2_COMPARISON_DIR="$WD/ros2/eval-ws"
+MQTT_COMPARISON_DIR="$WD/mqtt/target"
 
-ROS2_SRC="ros2 run sender sender_ros"
-ROS2_OP="ros2 run compute compute_ros"
-ROS2_SINK="ros2 run receiver receiver_ros"
-PP_CDDS="ping-pong-cyclone"
+ROS2_PING="ros2 run sender sender_ros"
+ROS2_PONG="ros2 run receiver receiver_ros"
 
-ROS_SRC="sender/sender_node"
-ROS_OP="compute/compute_node"
-ROS_SINK="receiver/receiver_node"
+ROS_PING="sender/sender_node"
+ROS_PONG="receiver/receiver_node"
 
-OUT_DIR="${OUT_DIR:-breakdown-logs}"
+MQTT_PING="mqtt_ping"
+MQTT_PONG="mqtt_pong"
+
+OUT_DIR="${OUT_DIR:-latenncy-logs}"
 MSGS=${MSGS:-1}
 DURATION=${DURATION:-60}
 SIZE=${SIZE:-8}
@@ -67,17 +58,21 @@ CPUS="${CPUS:-0,1}"
 mkdir -p $OUT_DIR
 NICE="${NICE:--10}"
 ROS_MASTER_URI="${ROS_MASTER_URI:-http://127.0.0.1:11311}"
-CYCLONEDDS_URI="${CYCLONEDDS_URI}"
+CYCLONEDDS_URI="${CYCLONEDDS_URI:-$WD/ros2/cyclonedds.xml}"
 LISTEN="${LISTEN:-tcp/127.0.0.1:7447}"
 CONNECT="${LISTEN:-tcp/127.0.0.1:7887}"
 ROS_IP="${ROS_IP:-127.0.0.1}"
+ROSDISTRO="${ROS_DISTRO:-foxy}"
+
+ZENOHD="${ZENOHD:-/usr/bin/zenohd}"
+MOSQUITTO="${MOSQUITTO:-/usr/bin/mosquitto}"
+MOSQUITTO_CONF="${MOSQUITTO_CONF:-$WD/mqtt/mosquitto.conf}"
 
 
 # Run source by default:
-# - 1 = Source
-# - 2 = Operator
-# - 3 = Sink
-# - 4 = ROS Master (only for ROS1 tests)
+# - 1 = Ping
+# - 2 = Pong
+# - 3 = Broker (i.e., ROS Master, Mosquitto, Kafka server, zenohd)
 TORUN=1
 
 
@@ -85,61 +80,100 @@ plog "[ INIT ] Duration will be $DURATION seconds"
 plog "[ INIT ] Sending rate will be $MSGS msg/s"
 plog "[ INIT ] Size for throughput test will be $SIZE"
 plog "[ INIT ] ROS_IP is $ROS_IP"
-while getopts "ioemzrR" arg; do
+while getopts "iobzrRmk" arg; do
    case ${arg} in
    h)
       usage
       ;;
    i)
-      # Start Source
+      # Start Ping
 
-      plog "[ INIT ] Running a source"
+      plog "[ INIT ] Running a ping"
       TORUN=1
       ;;
    o)
-      # Start operator
+      # Start pong
 
-      plog "[ INIT ] Running an operator"
+      plog "[ INIT ] Running an pong"
       TORUN=2
       ;;
-   e)
-      # Start sink
-
-      plog "[ INIT ] Running a sink"
+   b)
+      # Start the broker
+      plog "[ INIT ] Running the broker"
       TORUN=3
       ;;
-   m)
-      # Start the ROS master
-      plog "[ INIT ] Running the rosmaster"
-      TORUN=4
-      ;;
-   z)
-      # Zenoh Flow
-      descriptor_file="descriptor-src-op-sink-$MSGS.yaml"
+   k)
+      #MQTT
       case ${TORUN} in
       1)
-         plog "[ RUN ] Running Zenoh Flow source with msg/s $MSGS"
-         $BIN_DIR/$LAT_DYNAMIC --ping -m $MSGS -d $descriptor_file > /dev/null 2>&1
-         timeout $DURATION nice $NICE taskset -c $CPUS $BIN_DIR/$LAT_DYNAMIC -r -n "src" -d $descriptor_file --listen $LISTEN --connect $CONNECT> /dev/null 2>&1
-         plog "[ DONE ] Running Zenoh Flow source with msg/s $MSGS"
-         rm $descriptor_file
+         plog "[ RUN ] Running Kafka ping with msg/s $MSGS"
+         INTERVAL=$(bc -l <<< "1/$MSGS")
+         LOG_FILE="$OUT_DIR/kafka-latency-$MSGS-$TS.csv"
+         echo "framework,test,metric,value,unit" > $LOG_FILE
+         timeout $DURATION nice $NICE taskset -c $CPUS $BIN_DIR/$KAFKA_PING -i $INTERVAL -b $CONNECT  >> $LOG_FILE 2> /dev/null
+         plog "[ DONE ] Running Kafka ping msg/s $MSGS, logged to $LOG_FILE"
          ;;
       2)
-         plog "[ RUN ] Running Zenoh Flow operator with msg/s $MSGS"
-         $BIN_DIR/$LAT_DYNAMIC --ping -m $MSGS -d $descriptor_file > /dev/null 2>&1
-         nice $NICE taskset -c $CPUS $BIN_DIR/$LAT_DYNAMIC -r -n "comp0" -d $descriptor_file --listen $LISTEN --connect $CONNECT > /dev/null 2>&1
-         plog "[ DONE ] Running Zenoh Flow operator with msg/s $MSGS"
-         rm $descriptor_file
+         plog "[ RUN ] Running Kafka pong"
+         nice $NICE taskset -c $CPUS $BIN_DIR/$KAFKA_PONG -b $CONNECT > /dev/null 2>&1
+         plog "[ DONE ] Running Kafka pong"
          ;;
       3)
-         LOG_FILE="$OUT_DIR/zf-lat-dynamic-$TS.csv"
-         echo "framework,scenario,test,pipeline,payload,rate,value,unit" > $LOG_FILE
-
-         plog "[ RUN ] Running Zenoh Flow sink with msg/s $MSGS logging to $LOG_FILE"
-         $BIN_DIR/$LAT_DYNAMIC --ping -m $MSGS -d $descriptor_file > /dev/null 2>&1
-         nice $NICE taskset -c $CPUS $BIN_DIR/$LAT_DYNAMIC -r -n "snk" -d $descriptor_file --listen $LISTEN --connect $CONNECT >> $LOG_FILE 2> /dev/null
-         plog "[ DONE ] Running Zenoh Flow sink with msg/s $MSGS, logged to $LOG_FILE"
-         rm $descriptor_file
+         plog "[ RUN ] Running Kafka server"
+         nice $NICE taskset -c $CPUS $MOSQUITTO -c $MOSQUITTO_CONF > /dev/null 2>&1
+         plog "[ DONE ] Running Kafka server"
+         ;;
+      *)
+         usage
+         ;;
+      esac
+      ;;
+   m)
+      #MQTT
+      case ${TORUN} in
+      1)
+         plog "[ RUN ] Running MQTT ping with msg/s $MSGS"
+         INTERVAL=$(bc -l <<< "1/$MSGS")
+         LOG_FILE="$OUT_DIR/mqtt-latency-$MSGS-$TS.csv"
+         echo "framework,test,metric,value,unit" > $LOG_FILE
+         timeout $DURATION nice $NICE taskset -c $CPUS $MQTT_COMPARISON_DIR/$MQTT_PING -i $INTERVAL -b $CONNECT  >> $LOG_FILE 2> /dev/null
+         plog "[ DONE ] Running MQTT ping msg/s $MSGS, logged to $LOG_FILE"
+         ;;
+      2)
+         plog "[ RUN ] Running MQTT pong"
+         nice $NICE taskset -c $CPUS $MQTT_COMPARISON_DIR/$MQTT_PONG -b $CONNECT > /dev/null 2>&1
+         plog "[ DONE ] Running MQTT pong"
+         ;;
+      3)
+         plog "[ RUN ] Running mosquitto"
+         nice $NICE taskset -c $CPUS $MOSQUITTO -c $MOSQUITTO_CONF > /dev/null 2>&1
+         plog "[ DONE ] Running mosquitto"
+         ;;
+      *)
+         usage
+         ;;
+      esac
+      ;;
+   z)
+      # Zenoh
+      case ${TORUN} in
+      1)
+         plog "[ RUN ] Running Zenoh ping with msg/s $MSGS"
+         INTERVAL=$(bc -l <<< "1/$MSGS")
+         LOG_FILE="$OUT_DIR/zenoh-latency-$MSGS-$TS.csv"
+         echo "framework,test,metric,value,unit" > $LOG_FILE
+         timeout $DURATION nice $NICE taskset -c $CPUS $BIN_DIR/$ZENOH_PING -i $INTERVAL -m peer --listen $LISTEN --connect $CONNECT  >> $LOG_FILE 2> /dev/null
+         plog "[ DONE ] Running Zenoh ping msg/s $MSGS, logged to $LOG_FILE"
+         ;;
+      2)
+         plog "[ RUN ] Running Zenoh pong"
+         nice $NICE taskset -c $CPUS $BIN_DIR/$ZENOH_PONG -m peer --listen $LISTEN --connect $CONNECT > /dev/null 2>&1
+         plog "[ DONE ] Running Zenoh pong"
+         ;;
+      3)
+         plog "[ RUN ] Running zenohd"
+         nice $NICE taskset -c $CPUS $ZENOHD --listen $LISTEN --connect $CONNECT > /dev/null 2>&1
+         plog "[ DONE ] Running zenohd"
          ;;
       *)
          usage
@@ -152,30 +186,23 @@ while getopts "ioemzrR" arg; do
       export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       export ROS_LOCALHOST_ONLY=1
       export CYCLONEDDS_URI=$CYCLONEDDS_URI
-      source /opt/ros/galactic/setup.bash
+      source /opt/ros/$ROSDISTRO/setup.bash
       source $ROS2_COMPARISON_DIR/install/setup.bash
 
 
       case ${TORUN} in
       1)
-         plog "[ RUN ] Running ROS2 source with msg/s $MSGS"
-         timeout $DURATION nice $NICE taskset -c $CPUS $ROS2_SRC $MSGS > /dev/null 2>&1
-         plog "[ DONE ] Running ROS2 source with msg/s $MSGS"
+         plog "[ RUN ] Running ROS2 ping with msg/s $MSGS"
+         LOG_FILE="$OUT_DIR/ros2-latency-$MSGS-$TS.csv"
+         echo "framework,test,metric,value,unit" > $LOG_FILE
+         timeout $DURATION nice $NICE taskset -c $CPUS $ROS2_PING $MSGS >> $LOG_FILE 2> /dev/null
+         plog "[ DONE ] Running ROS2 ping with msg/s $MSGS"
          ps -ax | grep sender_ros | awk {'print $1'} | xargs kill -9 > /dev/null  2>&1
          ;;
       2)
-         plog "[ RUN ] Running ROS2 operator with msg/s $MSGS"
-         nice $NICE taskset -c $CPUS $ROS2_OP "out_0" "out_1" > /dev/null  2>&1
-         plog "[ DONE ] Running ROS2 operator with msg/s $MSGS"
-         ps -ax | grep compute_ros | awk {'print $1'} | xargs kill -9 > /dev/null  2>&1
-         ;;
-      3)
-         LOG_FILE="$OUT_DIR/ros2-lat-$TS.csv"
-         echo "framework,scenario,test,pipeline,payload,rate,value,unit" > $LOG_FILE
-
-         plog "[ RUN ] Running ROS2 sink with msg/s $MSGS logging to $LOG_FILE"
-         nice $NICE taskset -c $CPUS $ROS2_SINK $MSGS $CHAIN_LENGTH "out_1" >> $LOG_FILE 2> /dev/null
-         plog "[ DONE ] Running ROS2 sink with msg/s $MSGS, logged to $LOG_FILE"
+         plog "[ RUN ] Running ROS2 pong "
+         nice $NICE taskset -c $CPUS $ROS2_PONG > /dev/null  2>&1
+         plog "[ DONE ] Running ROS2 pong"
          ps -ax | grep receiver_ros | awk {'print $1'} | xargs kill -9 > /dev/null  2>&1
          ;;
       *)
@@ -189,33 +216,26 @@ while getopts "ioemzrR" arg; do
    R)
       # ROS
 
-      source /opt/ros/noetic/setup.bash
+      source /opt/ros/$ROSDISTRO/setup.bash
       export ROS_MASTER_URI=$ROS_MASTER_URI
       export ROS_IP="$ROS_IP"
 
       case ${TORUN} in
       1)
-         plog "[ RUN ] Running ROS source with msg/s $MSGS"
-         timeout $DURATION nice $NICE taskset -c $CPUS $ROS_BIN_DIR/$ROS_SRC $MSGS > /dev/null 2>&1
+         plog "[ RUN ] Running ROS ping with msg/s $MSGS"
+         LOG_FILE="$OUT_DIR/ros-latency-$MSGS-$TS.csv"
+         echo "framework,test,metric,value,unit" > $LOG_FILE
+         timeout $DURATION nice $NICE taskset -c $CPUS $ROS_BIN_DIR/$ROS_PING $MSGS >> $LOG_FILE 2> /dev/null
          plog "[ DONE ] Running ROS source with msg/s $MSGS"
          ps -ax | grep sender_node | awk {'print $1'} | xargs kill -9 > /dev/null 2>&1
          ;;
       2)
-         plog "[ RUN ] Running ROS operator with msg/s $MSGS"
-         nice $NICE taskset -c $CPUS $ROS_BIN_DIR/$ROS_OP "out_0" "out_1" > /dev/null 2>&1
-         plog "[ DONE ] Running ROS operator with msg/s $MSGS"
-         ps -ax | grep compute_node | awk {'print $1'} | xargs kill -9 > /dev/null 2>&1
-         ;;
-      3)
-         LOG_FILE="$OUT_DIR/ros-lat-$TS.csv"
-         echo "framework,scenario,test,pipeline,payload,rate,value,unit" > $LOG_FILE
-
-         plog "[ RUN ] Running ROS sink with msg/s $MSGS logging to $LOG_FILE"
-         nice $NICE taskset -c $CPUS $ROS_BIN_DIR/$ROS_SINK $MSGS $CHAIN_LENGTH "out_1" >> $LOG_FILE 2> /dev/null
-         plog "[ DONE ] Running ROS sink with msg/s $MSGS, logged to $LOG_FILE"
+         plog "[ RUN ] Running ROS pong"
+         nice $NICE taskset -c $CPUS $ROS_BIN_DIR/$ROS_PONG > /dev/null 2>&1
+         plog "[ DONE ] Running ROS pong"
          ps -ax | grep receiver_node | awk {'print $1'} | xargs kill -9 > /dev/null 2>&1
          ;;
-      4)
+      3)
          plog "[ RUN ] Running ROS master"
          nice $NICE taskset -c $CPUS roscore -p 11311
          ;;
