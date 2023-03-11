@@ -31,6 +31,7 @@ namespace ato {
                 rclcpp::Subscription<eval_interfaces::msg::Evaluation>::SharedPtr subscriber;
                 rclcpp::TimerBase::SharedPtr timer;
                 std::chrono::duration<double> pace;
+                double printable_pace;
                 void receiver_callback(const eval_interfaces::msg::Evaluation::SharedPtr msg);
 
         };

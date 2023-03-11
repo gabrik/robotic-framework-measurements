@@ -30,9 +30,6 @@ int main (int argc, char* argv[]) {
         .help("length of pipeline")
         .scan<'i', uint64_t>();
 
-    program.add_argument("input")
-        .help("input topic");
-
 
 
     try {
@@ -45,7 +42,7 @@ int main (int argc, char* argv[]) {
     }
 
     uint64_t msgs = program.get<uint64_t>("msgs");
-    std::string input = program.get<std::string>("input");
+    std::string input = "ping";
     uint64_t length = program.get<uint64_t>("length");
 
 

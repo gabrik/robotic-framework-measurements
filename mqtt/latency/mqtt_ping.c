@@ -219,7 +219,8 @@ int main(int argc, char* argv[])
             if (name && scenario) {
                 printf("mqtt,%s,latency,%s,%ld,%f,%lu,%ld\n", scenario, name, payload, interveal, ping_info.seq_num, elapsed / 2);
             } else {
-                printf("%.10f,%ld\n", interveal, elapsed / 2);
+                // <protocol>,[latency|througput],[interval|payload],<value>,<unit>
+                printf("mqtt,latency,%.10f,%ld,us\n", interveal, elapsed / 2);
             }
             fflush(stdout);
             seq_num += 1;

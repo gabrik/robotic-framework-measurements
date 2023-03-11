@@ -42,8 +42,8 @@ void Receiver::print_stat(const uint64_t elapsed){
     uint64_t msgs = (uint64_t) ((float) received/interval);
 
     if (msgs > 0) {
-        // framework,scenario,test,pipeline,payload,rate,value,unit
-        std::cout << "ros,multi,throughput," << this->pipeline_length << "," << this->size << "," << msgs << "," << msgs << ",msgs" << std::endl << std::flush;
+        // <protocol>,[latency|througput],[interval|payload],<value>,<unit>
+        std::cout << "ros,throughput," << this->size << "," << msgs << ",msgs" << std::endl << std::flush;
     }
 
 }

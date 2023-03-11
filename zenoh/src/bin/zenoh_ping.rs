@@ -103,6 +103,7 @@ fn main() {
         let instant = Instant::now();
         publisher.put(data).res().unwrap();
         let _ = sub.recv();
-        println!("{},{}", opt.interval, instant.elapsed().as_micros() / 2);
+        // <protocol>,[latency|througput],[interval|payload],<value>,<unit>
+        println!("zenoh,latency,{},{},us", opt.interval, instant.elapsed().as_micros() / 2);
     }
 }

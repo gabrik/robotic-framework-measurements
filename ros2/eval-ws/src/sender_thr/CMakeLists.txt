@@ -31,8 +31,14 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(eval_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(argparse REQUIRED)
 
+# fetch latest argparse
+include(FetchContent)
+FetchContent_Declare(
+    argparse
+    GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+)
+FetchContent_MakeAvailable(argparse)
 ## BUILD
 
 include_directories(
@@ -48,7 +54,7 @@ set(DEPENDENCIES
   "eval_interfaces"
 )
 
-target_link_libraries(${PROJECT_NAME}_lib)
+target_link_libraries(${PROJECT_NAME}_lib argparse)
 ament_target_dependencies(${PROJECT_NAME}_lib ${DEPENDENCIES})
 
 set(EXECUTABLE_NAME "sender_ros_thr")

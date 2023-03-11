@@ -24,7 +24,14 @@ find_package(catkin REQUIRED COMPONENTS
   eval_interfaces REQUIRED
   roscpp REQUIRED
 )
-find_package(argparse REQUIRED)
+
+# fetch latest argparse
+include(FetchContent)
+FetchContent_Declare(
+    argparse
+    GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+)
+FetchContent_MakeAvailable(argparse)
 
 add_executable(sender_node src/node_main.cpp src/sender.cpp )
 
@@ -33,6 +40,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-target_link_libraries(sender_node ${catkin_LIBRARIES})
+target_link_libraries(sender_node ${catkin_LIBRARIES} argparse)
 install(TARGETS sender_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

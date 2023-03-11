@@ -27,6 +27,7 @@ namespace ato {
                 ros::Publisher publisher;
                 ros::Subscriber subscriber;
                 std::chrono::duration<double> pace;
+                double printable_pace;
                 void receiver_callback(const eval_interfaces::Evaluation::ConstPtr& msg);
 
 

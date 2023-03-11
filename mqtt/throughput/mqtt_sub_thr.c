@@ -174,7 +174,8 @@ int main(int argc, char* argv[])
                 if (scenario && name) {
                     printf("mqtt,%s,throughput,%s,%ld,%ld\n", scenario, name, payload,n);
                 } else {
-                    printf("%ld,%.3f\n", payload,throughput);
+                    // <protocol>,[latency|througput],[interval|payload],<value>,<unit>
+                    printf("mqtt,througput,%ld,%.3f,msgs\n", payload,throughput);
                 }
                 fflush(stdout);
 

@@ -225,8 +225,8 @@ async fn recv(
                 "Ignore the payload from a foreign ping ID {}",
                 info.ping_id
             );
-
-            println!("{},{}", opts.interval, info.rtt.as_micros() / 2);
+            // <protocol>,[lantecy|througput],[interval|payload],<value>,<unit>
+            println!("kafka,latency,{},{},us", opts.interval, info.rtt.as_micros() / 2);
 
             Ok(true)
         }
