@@ -60,10 +60,9 @@ NICE="${NICE:--10}"
 ROS_MASTER_URI="${ROS_MASTER_URI:-http://127.0.0.1:11311}"
 CYCLONEDDS_URI="${CYCLONEDDS_URI:-$WD/ros2/cyclonedds.xml}"
 LISTEN="${LISTEN:-tcp/127.0.0.1:7447}"
-CONNECT="${LISTEN:-tcp/127.0.0.1:7887}"
+CONNECT="${CONNECT:-tcp/127.0.0.1:7887}"
 ROS_IP="${ROS_IP:-127.0.0.1}"
 ROSDISTRO="${ROS_DISTRO:-foxy}"
-
 ZENOHD="${ZENOHD:-/usr/bin/zenohd}"
 MOSQUITTO="${MOSQUITTO:-/usr/bin/mosquitto}"
 MOSQUITTO_CONF="${MOSQUITTO_CONF:-$WD/mqtt/mosquitto.conf}"
@@ -162,7 +161,7 @@ while getopts "iobzrRmk" arg; do
          INTERVAL=$(bc -l <<< "1/$MSGS")
          LOG_FILE="$OUT_DIR/zenoh-latency-$MSGS-$TS.csv"
          echo "framework,test,metric,value,unit" > $LOG_FILE
-         timeout $DURATION nice $NICE taskset -c $CPUS $BIN_DIR/$ZENOH_PING -i $INTERVAL -m peer --listen $LISTEN --connect $CONNECT  >> $LOG_FILE 2> /dev/null
+         timeout $DURATION nice $NICE taskset -c $CPUS $BIN_DIR/$ZENOH_PING -i $INTERVAL -m peer --listen $LISTEN --connect $CONNECT  -p 64 >> $LOG_FILE 2> /dev/null
          plog "[ DONE ] Running Zenoh ping msg/s $MSGS, logged to $LOG_FILE"
          ;;
       2)
@@ -201,7 +200,7 @@ while getopts "iobzrRmk" arg; do
          ;;
       2)
          plog "[ RUN ] Running ROS2 pong "
-         nice $NICE taskset -c $CPUS $ROS2_PONG > /dev/null  2>&1
+         nice $NICE taskset -c $CPUS $ROS2_PONG  > /dev/null  2>&1
          plog "[ DONE ] Running ROS2 pong"
          ps -ax | grep receiver_ros | awk {'print $1'} | xargs kill -9 > /dev/null  2>&1
          ;;
