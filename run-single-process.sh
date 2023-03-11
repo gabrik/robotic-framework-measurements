@@ -50,7 +50,7 @@ ROS_PONG="receiver/receiver_node"
 MQTT_PING="mqtt_ping"
 MQTT_PONG="mqtt_pong"
 
-OUT_DIR="${OUT_DIR:-latenncy-logs}"
+OUT_DIR="${OUT_DIR:-logs}"
 MSGS=${MSGS:-1}
 DURATION=${DURATION:-60}
 SIZE=${SIZE:-8}
