@@ -1,0 +1,23 @@
+[package]
+name = "analyze-zenoh-pcap"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[[bin]]
+name = "analyze-zenoh-pcap"
+
+[dependencies]
+# zenoh-flow = "0.4.0-alpha.1"
+prettytable-rs = "^0.10"
+zenoh = { path = "/Volumes/Workspace/Workspace/zettascale/zenoh/zenoh/zenoh"}
+zenoh-buffers = { path = "/Volumes/Workspace/Workspace/zettascale/zenoh/zenoh/commons/zenoh-buffers" }
+zenoh-protocol = {path = "/Volumes/Workspace/Workspace/zettascale/zenoh/zenoh/commons/zenoh-protocol"}
+zenoh-codec = { path = "/Volumes/Workspace/Workspace/zettascale/zenoh/zenoh/commons/zenoh-codec" }
+clap = { version = "4.0", features = ["derive"] }
+async-std = { version = "=1.12.0", features = ["attributes"] }
+sniffglue = "0.15.0"
+env_logger = "0.10.0"
+log = "0.4"
