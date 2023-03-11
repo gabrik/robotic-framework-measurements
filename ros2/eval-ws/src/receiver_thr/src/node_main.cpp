@@ -41,15 +41,6 @@ int main (int argc, char* argv[]) {
         .help("message size")
         .scan<'i', uint64_t>();
 
-     program.add_argument("length")
-        .help("length of pipeline")
-        .scan<'i', uint64_t>();
-
-    program.add_argument("input")
-        .help("input topic");
-
-
-
     try {
         program.parse_args(argc, argv);
     }
@@ -60,15 +51,14 @@ int main (int argc, char* argv[]) {
     }
 
     uint64_t size = program.get<uint64_t>("size");
-    std::string input = program.get<std::string>("input");
-    uint64_t length = program.get<uint64_t>("length");
+    std::string input = "thr";
 
 
     rclcpp::init(argc, argv);
     rclcpp::executors::SingleThreadedExecutor executor;
 
 
-    auto receiver = std::make_shared<ato::receiver::Receiver>(size, input, length);
+    auto receiver = std::make_shared<ato::receiver::Receiver>(size, input);
 
     std::thread t1(print_statistics, receiver);
 

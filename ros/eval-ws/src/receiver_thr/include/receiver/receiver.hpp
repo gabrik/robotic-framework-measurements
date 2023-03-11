@@ -23,7 +23,7 @@ namespace ato {
         class Receiver {
 
             public:
-                explicit Receiver(const uint64_t size, const std::string topic_name, const uint64_t pipeline_length, ros::NodeHandle &nh);
+                explicit Receiver(const uint64_t size, const std::string topic_name, ros::NodeHandle &nh);
                 virtual ~Receiver() {};
                 void print_stat(const uint64_t elapsed);
 
@@ -31,7 +31,6 @@ namespace ato {
                 ros::NodeHandle nh;
                 ros::Subscriber subscriber;
                 uint64_t size;
-                uint64_t pipeline_length;
                 std::atomic<uint64_t> recv;
                 void receiver_callback(const eval_interfaces::Thr::ConstPtr& msg);
 

@@ -22,15 +22,13 @@ namespace ato {
         class Receiver {
 
             public:
-                explicit Receiver(const uint64_t msgs, const std::string topic_name, const uint64_t pipeline_length, ros::NodeHandle &nh);
+                explicit Receiver(const std::string topic_name, ros::NodeHandle &nh);
                 virtual ~Receiver() {};
 
             private:
                 ros::NodeHandle nh;
                 ros::Publisher publisher;
                 ros::Subscriber subscriber;
-                uint64_t msgs;
-                uint64_t pipeline_length;
                 void receiver_callback(const eval_interfaces::Evaluation::ConstPtr& msg);
 
         };

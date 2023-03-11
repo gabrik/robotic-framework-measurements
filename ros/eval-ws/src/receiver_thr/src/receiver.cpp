@@ -23,10 +23,9 @@ using ato::ros_receiver::Receiver;
 
 
 
-Receiver::Receiver(const uint64_t size, const std::string topic_name, const uint64_t pipeline_length, ros::NodeHandle &nh) {
+Receiver::Receiver(const uint64_t size, const std::string topic_name, ros::NodeHandle &nh) {
     this->nh = nh;
     this->size = size;
-    this->pipeline_length = pipeline_length;
     this->subscriber = this->nh.subscribe(topic_name,QUEUE_LENGTH, &Receiver::receiver_callback, this);
     this->recv.store(0);
 

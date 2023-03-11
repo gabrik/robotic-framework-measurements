@@ -22,14 +22,13 @@ namespace ato {
         class Receiver : public rclcpp::Node {
 
             public:
-                explicit Receiver(const uint64_t size, const std::string topic_name, const uint64_t pipeline_length);
+                explicit Receiver(const uint64_t size, const std::string topic_name);
                 virtual ~Receiver() {};
                 void print_stat(const uint64_t elapsed);
 
             private:
                 rclcpp::Subscription<eval_interfaces::msg::Thr>::SharedPtr subscriber;
                 uint64_t size;
-                uint64_t pipeline_length;
                 std::atomic<uint64_t> recv;
                 void receiver_callback(const eval_interfaces::msg::Thr::SharedPtr msg);
 

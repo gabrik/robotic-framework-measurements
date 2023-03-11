@@ -23,10 +23,8 @@ using ato::ros_receiver::Receiver;
 
 
 
-Receiver::Receiver(const uint64_t msgs, const std::string topic_name, const uint64_t pipeline_length, ros::NodeHandle &nh) {
+Receiver::Receiver(const std::string topic_name,ros::NodeHandle &nh) {
     this->nh = nh;
-    this->msgs = msgs;
-    this->pipeline_length = pipeline_length;
     this->subscriber = this->nh.subscribe(topic_name,1024, &Receiver::receiver_callback, this);
     this->publisher = this->nh.advertise<eval_interfaces::Evaluation>("pong", 1024);
 

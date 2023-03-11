@@ -15,40 +15,17 @@
 
 #include "ros/ros.h"
 #include "receiver/receiver.hpp"
-#include <argparse/argparse.hpp>
-
 
 int main(int argc, char **argv) {
 
-    argparse::ArgumentParser program("receiver");
 
-    program.add_argument("msgs")
-        .help("messages per second")
-        .scan<'i', uint64_t>();
-
-     program.add_argument("length")
-        .help("length of pipeline")
-        .scan<'i', uint64_t>();
-
-
-    try {
-        program.parse_args(argc, argv);
-    }
-    catch (const std::runtime_error& err) {
-        std::cerr << err.what() << std::endl;
-        std::cerr << program;
-        std::exit(1);
-    }
-
-    uint64_t msgs = program.get<uint64_t>("msgs");
     std::string input = "ping";
-    uint64_t length = program.get<uint64_t>("length");
 
     ros::init(argc, argv, "receiver");
 
     ros::NodeHandle nh;
 
-    auto sender = ato::ros_receiver::Receiver(msgs, input, length, nh);
+    auto sender = ato::ros_receiver::Receiver(input, nh);
 
 
     while(nh.ok()) {
