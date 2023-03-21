@@ -64,8 +64,8 @@ CONNECT="${CONNECT:-tcp/127.0.0.1:7887}"
 ROS_IP="${ROS_IP:-127.0.0.1}"
 ROSDISTRO="${ROS_DISTRO:-foxy}"
 ZENOHD="${ZENOHD:-/usr/bin/zenohd}"
-MOSQUITTO="${MOSQUITTO:-/usr/bin/mosquitto}"
-MOSQUITTO_CONF="${MOSQUITTO_CONF:-$WD/mqtt/mosquitto.conf}"
+MOSQUITTO="mqtt/docker-compose.yaml"
+KAFKA="kafka/docker-compose.yaml"
 
 
 # Run source by default:
@@ -102,7 +102,7 @@ while getopts "iobzrRmk" arg; do
       TORUN=3
       ;;
    k)
-      #MQTT
+      #Kafka
       case ${TORUN} in
       1)
          plog "[ RUN ] Running Kafka ping with msg/s $MSGS"
@@ -119,7 +119,7 @@ while getopts "iobzrRmk" arg; do
          ;;
       3)
          plog "[ RUN ] Running Kafka server"
-         nice $NICE taskset -c $CPUS $MOSQUITTO -c $MOSQUITTO_CONF > /dev/null 2>&1
+         docker compose up -d $KAFKA up > /dev/null 2>&1
          plog "[ DONE ] Running Kafka server"
          ;;
       *)
@@ -145,7 +145,7 @@ while getopts "iobzrRmk" arg; do
          ;;
       3)
          plog "[ RUN ] Running mosquitto"
-         nice $NICE taskset -c $CPUS $MOSQUITTO -c $MOSQUITTO_CONF > /dev/null 2>&1
+         docker compose up -d $MOSQUITTO up > /dev/null 2>&1
          plog "[ DONE ] Running mosquitto"
          ;;
       *)
