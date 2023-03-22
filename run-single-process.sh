@@ -109,7 +109,7 @@ while getopts "iobzrRmk" arg; do
          INTERVAL=$(bc -l <<< "1/$MSGS")
          LOG_FILE="$OUT_DIR/kafka-latency-$MSGS-$TS.csv"
          echo "framework,test,metric,value,unit" > $LOG_FILE
-         timeout $DURATION nice $NICE taskset -c $CPUS $BIN_DIR/$KAFKA_PING -i $INTERVAL -b $CONNECT  >> $LOG_FILE 2> /dev/null
+         timeout $DURATION nice $NICE taskset -c $CPUS $BIN_DIR/$KAFKA_PING -i $INTERVAL -b $CONNECT -p 64 >> $LOG_FILE 2> /dev/null
          plog "[ DONE ] Running Kafka ping msg/s $MSGS, logged to $LOG_FILE"
          ;;
       2)
@@ -119,7 +119,7 @@ while getopts "iobzrRmk" arg; do
          ;;
       3)
          plog "[ RUN ] Running Kafka server"
-         docker compose up -d $KAFKA up > /dev/null 2>&1
+         docker compose -f $KAFKA up > /dev/null 2>&1
          plog "[ DONE ] Running Kafka server"
          ;;
       *)
@@ -135,7 +135,7 @@ while getopts "iobzrRmk" arg; do
          INTERVAL=$(bc -l <<< "1/$MSGS")
          LOG_FILE="$OUT_DIR/mqtt-latency-$MSGS-$TS.csv"
          echo "framework,test,metric,value,unit" > $LOG_FILE
-         timeout $DURATION nice $NICE taskset -c $CPUS $MQTT_COMPARISON_DIR/$MQTT_PING -i $INTERVAL -b $CONNECT  >> $LOG_FILE 2> /dev/null
+         timeout $DURATION nice $NICE taskset -c $CPUS $MQTT_COMPARISON_DIR/$MQTT_PING -i $INTERVAL -b $CONNECT  -p 64 >> $LOG_FILE 2> /dev/null
          plog "[ DONE ] Running MQTT ping msg/s $MSGS, logged to $LOG_FILE"
          ;;
       2)
@@ -145,7 +145,7 @@ while getopts "iobzrRmk" arg; do
          ;;
       3)
          plog "[ RUN ] Running mosquitto"
-         docker compose up -d $MOSQUITTO up > /dev/null 2>&1
+         docker compose -f $MOSQUITTO up > /dev/null 2>&1
          plog "[ DONE ] Running mosquitto"
          ;;
       *)

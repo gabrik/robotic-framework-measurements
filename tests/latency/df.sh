@@ -25,6 +25,39 @@ function ctrl_c() {
     exit
 }
 
+
+function kafka_cleanup() {
+    ssh $K_BROKER "
+        cd $WORKING_DIR/$PERF_DIR/kafka
+        docker compose kill -s SIGKILL
+        docker compose down
+    "
+
+    ssh $K_PING "
+        killall -9 kafka_ping
+    "
+
+    ssh $K_PONG "
+        killall -9 kafka_pong
+    "
+}
+
+function mqtt_cleanup() {
+    ssh $M_BROKER "
+        cd $WORKING_DIR/$PERF_DIR/mqtt
+        docker compose kill -s SIGKILL
+        docker compose down
+    "
+
+    ssh $K_PING "
+        killall -9 kafka_ping
+    "
+
+    ssh $K_PONG "
+        killall -9 kafka_pong
+    "
+}
+
 function ros_cleanup() {
     # ROS
     ssh $ROS_MASTER "
@@ -241,11 +274,89 @@ while getopts "hzrRmk" arg; do
         ;;
     k)
         # Kafka
-        plog "[ WARN ] Kafka not yet implemented"
+        plog "[ INIT ] Testing Kafka"
+        s=$INITIAL_MSGS
+        while [ $s -le $FINAL_MSGS ]
+        do
+            plog "[ START ] Kafka Starting testing for $s msg/s"
+
+            plog "[ START ] Kafka Starting broker"
+            ssh -f $K_BROKER "
+                cd $WORKING_DIR/$PERF_DIR
+                ./run-single-process.sh -bk
+            "
+            MASTER_PID=$!
+            sleep 10
+
+            plog "[ START ] Kafka Starting Kafka pong"
+            ssh -f $K_PONG "
+                cd $WORKING_DIR/$PERF_DIR
+                CONNECT=$K_BROKER  NICE=$K_PONG_NICE CPUS=$K_PONG_CPUS ./run-single-process.sh -ok
+            "
+            PONG_PID=$!
+            sleep 1
+            plog "[ START ] Kafka Starting Kafka ping"
+            ssh $K_PING "
+                cd $WORKING_DIR/$PERF_DIR
+                CONNECT=$K_BROKER DURATION=$TEST_TIME NICE=$K_PING_NICE CPUS=$K_PING_CPUS MSGS=$s ./run-single-process.sh -ik
+            "
+            PING_PID=$!
+            sleep 1
+            wait $PING_PID
+            kafka_cleanup
+
+            wait $MASTER_PID
+            wait $PONG_PID
+
+            rsync -azv "$K_PING:~/$WORKING_DIR/$PERF_DIR/logs/*.csv" $TEST_LOGS/
+
+            plog "[ DONE ] Kafka Done testing for $s msg/s"
+            s=$(($s * 10))
+        done
+        plog "[ DONE ] Testing Kafka"
         ;;
     m)
         # MQTT
-        plog "[ WARN ] MQTT not yet implemented"
+        plog "[ INIT ] Testing MQTT"
+        s=$INITIAL_MSGS
+        while [ $s -le $FINAL_MSGS ]
+        do
+            plog "[ START ] MQTT Starting testing for $s msg/s"
+
+            plog "[ START ] MQTT Starting broker"
+            ssh -f $M_BROKER "
+                cd $WORKING_DIR/$PERF_DIR
+                ./run-single-process.sh -bm
+            "
+            MASTER_PID=$!
+            sleep 3
+
+            plog "[ START ] MQTT Starting MQTT pong"
+            ssh -f $M_PONG "
+                cd $WORKING_DIR/$PERF_DIR
+                CONNECT=$M_BROKER  NICE=$M_PONG_NICE CPUS=$M_PONG_CPUS ./run-single-process.sh -om
+            "
+            PONG_PID=$!
+            sleep 1
+            plog "[ START ] MQTT Starting MQTT ping"
+            ssh $M_PING "
+                cd $WORKING_DIR/$PERF_DIR
+                CONNECT=$M_BROKER DURATION=$TEST_TIME NICE=$M_PING_NICE CPUS=$M_PING_CPUS MSGS=$s ./run-single-process.sh -im
+            "
+            PING_PID=$!
+            sleep 1
+            wait $PING_PID
+            mqtt_cleanup
+
+            wait $MASTER_PID
+            wait $PONG_PID
+
+            rsync -azv "$M_PING:~/$WORKING_DIR/$PERF_DIR/logs/*.csv" $TEST_LOGS/
+
+            plog "[ DONE ] MQTT Done testing for $s msg/s"
+            s=$(($s * 10))
+        done
+        plog "[ DONE ] Testing MQTT"
         ;;
     *)
         usage
