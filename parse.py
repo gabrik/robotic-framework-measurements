@@ -10,13 +10,34 @@ from pathlib import Path
 import seaborn as sns
 import sys
 import argparse
+import math
 
 
 palette = {
-    'zenoh-flow': 'tab:blue',
-    'ros': 'tab:green',
-    'ros2': 'tab:orange',
+    'zenoh': 'blue',
+    'ros': 'green',
+    'ros2': 'orange',
+    'kafka': 'yellow',
+    'mqtt' : 'red',
 }
+
+
+palette_medians = {
+    'zenoh': 'red',
+    'ros': 'red',
+    'ros2': 'red',
+    'kafka': 'red',
+    'mqtt': 'red',
+}
+
+
+styles = {
+    'single': (0,0),
+    'multi': (1,1),
+}
+
+labels = ['Zenoh','ROS' ,'ROS 2', 'Kafka', 'MQTT']
+hue_order = ['zenoh', 'ros','ros2','kafka','mqtt']
 
 # palette = 'bright' #sns.color_palette("bright", 6) #'plasma'
 IMG_DIR = Path('img')
@@ -73,28 +94,39 @@ def interval_label(n):
     if n == 0:
         return "inf"
 
-    if n == 1:
+    if n == 1/1:
         return "1"
 
-    if n == 10:
+    if n == 1/10:
         return "10"
 
-    if n == 100:
+    if n == 1/100:
         return "100"
 
-    if n == 1000:
+    if n == 1/1000:
         return "1 K"
 
-    if n == 10000:
+    if n == 1/10000:
         return "10 K"
 
-    if n == 100000:
+    if n == 1/100000:
         return "100 K"
 
-    if n == 1000000:
+    if n == 1/1000000:
         return "1 M"
 
     return "1 M"
+
+
+def convert_value(line):
+    if line.unit == 's':
+        return line.value
+    if line.unit == 'ms':
+        return line.value / pow(10,3)
+    if line.unit == 'us':
+        return line.value / pow(10,6)
+    if line.unit == "ns":
+        return line.value / pow(10,9)
 
 def read_log(log_dir):
     log = None
@@ -123,49 +155,38 @@ def prepare(log_dir, kind):
 
     # log['value'] = log['value'].astype(int, errors='ignore')
     log['value'] = pd.to_numeric(log['value'], errors='coerce')
+    log['metric'] = pd.to_numeric(log['metric'], errors='coerce')
 
-    if kind == 'latency':
-        # Remove first and last two samples of every test
-        mask = log.groupby(['framework', 'scenario','test','pipeline','payload', 'rate']).transform(
-        mask_first_and_last)['value']
-    elif kind == 'throughput':
-        # Remove first and last two samples of every test
-        mask = log.groupby(['framework', 'scenario','test','pipeline','payload']).transform(
-        mask_first_and_last)['value']
+    mask = log.groupby(['framework','test','metric']).transform(mask_first_and_last)['value']
+
     log = log.loc[mask]
 
     if kind == 'latency':
         # this converts everything to seconds, data is expected as micro seconds
-        log['value']= [ v/1000000 for v in log['value']] #TODO there is a unit field that should be used for the conversion
-        log['label'] = [interval_label(v) for k, v in log['rate'].iteritems()]
-        log.sort_values(by='rate', inplace=True)
+        log['value']= log.apply(convert_value, axis=1)
+        log = log[log['value']>pow(10,-9)]
+        log['label'] = [interval_label(v) for k, v in log['metric'].iteritems()]
+        log.sort_values(by='metric', inplace=True,ascending=False)
     elif kind == 'throughput':
-        log['label'] = [bytes_label(v) for k, v in log['payload'].iteritems()]
-        log.sort_values(by='payload', inplace=True)
+        log['label'] = [bytes_label(v) for k, v in log['metric'].iteritems()]
+        log.sort_values(by='metric', inplace=True,ascending=False)
 
 
     log['framework'] = log['framework'].astype(str)
 
     # adding count of samples
-    log['counter'] = log.groupby(['framework', 'scenario','test','pipeline','payload','rate'])['framework'].cumcount().add(1)
+    log['counter'] = log.groupby(['framework', 'test','metric'])['framework'].cumcount().add(1)
 
     log = log.reset_index()
     return log
 
-def filter(log, process, msgs=None, pipeline=None):
+def filter(log, framework=None):
     layers = log['framework'].unique()
-
-    # filtering if multi process or same process\
-    log = log[log['scenario'].isin([process])]
-
 
 
     # filtering is msg/s is set
-    if msgs is not None:
-        log = log[log['rate']==msgs]
-
-    if pipeline is not None:
-        log = log[log['pipeline']==pipeline]
+    if framework is not None:
+        log = log[log['framework']==framework]
 
     return log
 
@@ -271,11 +292,14 @@ def latency_pdf_plot(log, scale, outfile):
 
 def latency_stat_plot(log, scale, outfile):
 
+    fws = log['framework'].unique()
+    print(f'Frameworks: {fws}')
+
     fig, axes = plt.subplots()
 
     g = sns.lineplot(data=log, x='label', y='value', palette=palette,
                 ci=95, err_style='band', hue='framework',
-                estimator=np.median, style='pipeline')
+                estimator=np.median,)
 
     if scale == 'log':
         g.set_yscale('log')
@@ -361,7 +385,102 @@ def latency_time_plot(log, scale, outfile):
 
     fig.savefig(IMG_DIR.joinpath(outfile))
 
+def rtt_violin_plot(log, scale, outfile):
+    if scale != "log":
+        raise ValueError("Volin Latency plot works only with log scale")
 
+
+    #convert the data to log because:
+    # Currently, violinplot does not compute the density
+    # estimate in log space if the axis is log scaled;
+    # it computes the density on a linear grid and then scales those values.
+    # The same is true for boxplot, but boxplots are based on quantiles
+    # and those do not change when log transformed (but note the
+    # imbalance in outliers on the log plot version).
+    # You'll need to log transform the data before giving it to either function.
+    log['value']= log.apply(lambda line: np.log10(line.value), axis=1)
+
+    fig, axes = plt.subplots()
+
+    ys = [math.pow(10,e) for e in range(-7,0)]
+
+
+    sns.set_style({'font.family':'serif', 'font.serif':'Times New Roman'})
+    plt.rcParams["font.family"] = "serif"
+    plt.rcParams["font.serif"] = 'Times New Roman'
+    plt.rcParams['font.size'] = 13
+
+    font = {'fontname':'Times New Roman', 'fontsize':13}
+
+    fws = log['framework'].unique()
+    print(f'Frameworks: {fws}')
+
+    medians = log.groupby(['framework','test','label'])['value'].median().reset_index()
+
+    ax = sns.violinplot(data=log, x='label', y='value', palette=palette, hue='framework',
+        inner="box",
+        linewidth=0.8,
+        bw=0.2,
+        hue_order=hue_order,
+        )
+    #ax.set(ylim=(pow(10,-12), pow(10,-3)))
+
+    sns.swarmplot(x='label',
+        y='value',
+        data=medians,
+        edgecolor='black',
+        linewidth=1,
+        size=4,
+        dodge=True,
+        ax=ax,
+        hue='framework',
+        hue_order=hue_order,
+        palette=palette_medians,
+        )
+
+    # sns.boxplot(data=log, x='rate', y='value', palette=palette, hue='framework',
+    #     width=0.1,
+    #     medianprops=dict(color="red", alpha=0.7),
+    #     capprops=dict(linewidth=0.8),
+    #     whiskerprops=dict(linewidth=0.8),
+    #     # flierprops=dict(marker="x", markersize=1),
+    #     boxprops={'linewidth':0.8, 'zorder':2},
+    #     showfliers=False,
+    #     ax=axes,
+    #     # dodge=False,
+    #     )
+
+
+
+    # if scale == 'log':
+        # ax.set_yscale('log')
+
+
+    plt.grid(which='major', color='grey', linestyle='-', linewidth=0.1)
+    plt.grid(which='minor', color='grey', linestyle=':', linewidth=0.1, axis='y')
+
+    plt.xticks(rotation=72.5, **font)
+    plt.xlabel('Message rate (msg/s)', **font)
+
+    plt.yticks(ys, **font)
+    plt.ylabel('Latency (s)', **font)
+    plt.legend(title='Legend', loc='upper left')
+
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[:2], labels[:2], title='Framework', loc='upper left')
+
+    #ticker = mpl.ticker.EngFormatter(unit='')
+    ticker = mpl.ticker.StrMethodFormatter("$10^{{{x:.0f}}}$")
+    axes.yaxis.set_major_formatter(ticker)
+
+    y_min, y_max = ax.get_ylim()
+    print(f'min {y_min} max {y_max}')
+    tick_range = np.arange(np.floor(y_min), y_max)
+    ax.yaxis.set_ticks(tick_range)
+    ax.yaxis.set_ticks([np.log10(x) for p in tick_range for x in np.linspace(10 ** p, 10 ** (p + 1), 10)], minor=True)
+
+    plt.tight_layout()
+    fig.savefig(IMG_DIR.joinpath(outfile))
 
 
 def main():
@@ -369,7 +488,7 @@ def main():
     parser.add_argument('-k','--kind', help='Kind of the tests', required=False, choices=['latency', 'throughput'], default='latency')
     parser.add_argument('-d','--data', help='Logs directory', required=True, type=str)
     parser.add_argument('-p','--process', help='Single process or multi process', choices=['single', 'multi', 'all'], default='single', required=False)
-    parser.add_argument('-t','--type', help='Plot type', choices=['stat', 'time', 'ecdf', 'pdf'], default='stat', required=False)
+    parser.add_argument('-t','--type', help='Plot type', choices=['stat', 'time', 'ecdf', 'pdf', 'violin'], default='stat', required=False)
     parser.add_argument('-s','--scale', help='Plot scale', choices=['log', 'lin'], default='log', required=False)
     parser.add_argument('-m','--msgs', help='Filter for this # of msg/s', required=False, type=int)
     parser.add_argument('-l','--length', help='Filter for this pipeline length', required=False, type=int)
@@ -386,7 +505,7 @@ def main():
 
     log = prepare(args['data'], args['kind'])
     print(f'[ STEP1 ] Read a total of {log.size} samples')
-    log = filter(log, args['process'], args.get('msgs', None), args.get('length', None))
+    log = filter(log, None)
     print(f'[ STEP2 ] After filtering we have {log.size} samples')
     if log.size == 0:
         print(f'[ ERR ] Cannot continue without samples!')
@@ -414,6 +533,8 @@ def main():
             latency_ecfd_plot(log, args['scale'], args['output'])
         elif args['type'] == 'pdf':
             latency_pdf_plot(log, args['scale'], args['output'])
+        elif args['type'] == 'violin':
+            rtt_violin_plot(log, args['scale'], args['output'])
     elif args['kind'] == 'throughput':
         if args['type'] == 'stat':
             throughput_stat_plot(log, args['scale'], args['output'])
