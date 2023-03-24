@@ -31,3 +31,17 @@ C16_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\" ?><CycloneDDS xmlns
 C17_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\" ?><CycloneDDS xmlns=\"https://cdds.io/config\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd\"><Domain id=\"any\"><General><NetworkInterfaceAddress>enp7s0f0</NetworkInterfaceAddress></General></Domain></CycloneDDS>"
 
 C18_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\" ?><CycloneDDS xmlns=\"https://cdds.io/config\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd\"><Domain id=\"any\"><General><NetworkInterfaceAddress>enp7s0f0</NetworkInterfaceAddress></General></Domain></CycloneDDS>"
+
+
+
+PI_WIFI_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\"?><CycloneDDS xmlns=\"https://cdds.io/config\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd\"><Domain id=\"any\"><General><NetworkInterfaceAddress>wlan0</NetworkInterfaceAddress></General></Domain></CycloneDDS>"
+JETSON_WIFI_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\"?><CycloneDDS xmlns=\"https://cdds.io/config\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd\"><Domain id=\"any\"><General><NetworkInterfaceAddress>wlan0</NetworkInterfaceAddress></General></Domain></CycloneDDS>"
+LAPTOP_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\"?><CycloneDDS xmlns=\"https://cdds.io/config\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd\"><Domain id=\"any\"><General><NetworkInterfaceAddress>enp0s8</NetworkInterfaceAddress></General></Domain></CycloneDDS>"
+
+PI4="ubuntu@192.168.86.21"
+LAPTOP="192.168.86.76"
+JETSON="192.168.86.160"
+
+LAPTOP_WIFI="192.168.1.176"
+PI4_WIFI="192.168.1.241"
+JETSON_WIFI="192.168.1.137"

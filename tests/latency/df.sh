@@ -291,14 +291,14 @@ while getopts "hzrRmk" arg; do
             plog "[ START ] Kafka Starting Kafka pong"
             ssh -f $K_PONG "
                 cd $WORKING_DIR/$PERF_DIR
-                CONNECT=$K_BROKER  NICE=$K_PONG_NICE CPUS=$K_PONG_CPUS ./run-single-process.sh -ok
+                CONNECT=$K_BROKER_IP  NICE=$K_PONG_NICE CPUS=$K_PONG_CPUS ./run-single-process.sh -ok
             "
             PONG_PID=$!
             sleep 1
             plog "[ START ] Kafka Starting Kafka ping"
             ssh $K_PING "
                 cd $WORKING_DIR/$PERF_DIR
-                CONNECT=$K_BROKER DURATION=$TEST_TIME NICE=$K_PING_NICE CPUS=$K_PING_CPUS MSGS=$s ./run-single-process.sh -ik
+                CONNECT=$K_BROKER_IP DURATION=$TEST_TIME NICE=$K_PING_NICE CPUS=$K_PING_CPUS MSGS=$s ./run-single-process.sh -ik
             "
             PING_PID=$!
             sleep 1
@@ -334,14 +334,14 @@ while getopts "hzrRmk" arg; do
             plog "[ START ] MQTT Starting MQTT pong"
             ssh -f $M_PONG "
                 cd $WORKING_DIR/$PERF_DIR
-                CONNECT=$M_BROKER  NICE=$M_PONG_NICE CPUS=$M_PONG_CPUS ./run-single-process.sh -om
+                CONNECT=$M_BROKER_IP  NICE=$M_PONG_NICE CPUS=$M_PONG_CPUS ./run-single-process.sh -om
             "
             PONG_PID=$!
             sleep 1
             plog "[ START ] MQTT Starting MQTT ping"
             ssh $M_PING "
                 cd $WORKING_DIR/$PERF_DIR
-                CONNECT=$M_BROKER DURATION=$TEST_TIME NICE=$M_PING_NICE CPUS=$M_PING_CPUS MSGS=$s ./run-single-process.sh -im
+                CONNECT=$M_BROKER_IP DURATION=$TEST_TIME NICE=$M_PING_NICE CPUS=$M_PING_CPUS MSGS=$s ./run-single-process.sh -im
             "
             PING_PID=$!
             sleep 1
