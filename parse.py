@@ -254,7 +254,7 @@ def latency_ecfd_plot(log, scale, outfile):
         g.set_xscale('log')
 
     plt.xticks(rotation=72.5)
-    plt.xlabel('Latency (seconds)')
+    plt.xlabel('RTT (seconds)')
 
     # plt.legend(title='Legend', loc='center left', bbox_to_anchor=(1.0, 0.5))
 
@@ -279,7 +279,7 @@ def latency_pdf_plot(log, scale, outfile):
     #     g.set_xscale('log')
 
     plt.xticks(rotation=72.5)
-    plt.xlabel('Latency (seconds)')
+    plt.xlabel('RTT (seconds)')
 
     # plt.legend(title='Legend', loc='center left', bbox_to_anchor=(1.0, 0.5))
 
@@ -310,7 +310,7 @@ def latency_stat_plot(log, scale, outfile):
     plt.xticks(rotation=72.5)
     plt.xlabel('Messages per seconds (msg/s)')
 
-    plt.ylabel('Latency (seconds)')
+    plt.ylabel('RTT (seconds)')
     plt.legend(title='Legend', loc='center left', bbox_to_anchor=(1.0, 0.5))
 
     ticker = mpl.ticker.EngFormatter(unit='')
@@ -374,7 +374,7 @@ def latency_time_plot(log, scale, outfile):
     plt.xticks(rotation=72.5)
     plt.xlabel('Index')
 
-    plt.ylabel('Latency (seconds)')
+    plt.ylabel('RTT (seconds)')
     plt.legend(title='Legend', loc='center left', bbox_to_anchor=(1.0, 0.5))
 
 
@@ -463,7 +463,7 @@ def rtt_violin_plot(log, scale, outfile):
     plt.xlabel('Message rate (msg/s)', **font)
 
     plt.yticks(ys, **font)
-    plt.ylabel('Latency (s)', **font)
+    plt.ylabel('RTT (s)', **font)
     plt.legend(title='Legend', loc='upper left')
 
     handles, labels = ax.get_legend_handles_labels()
