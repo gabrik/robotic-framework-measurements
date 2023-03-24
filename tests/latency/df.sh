@@ -108,6 +108,8 @@ function cleanup() {
     ros_cleanup
     ros2_cleanup
     z_cleanup
+    mqtt_cleanup
+    kafka_cleanup
 }
 
 

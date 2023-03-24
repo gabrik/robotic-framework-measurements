@@ -17,7 +17,7 @@ palette = {
     'zenoh': 'blue',
     'ros': 'green',
     'ros2': 'orange',
-    'kafka': 'yellow',
+    'kafka': 'purple',
     'mqtt' : 'red',
 }
 
