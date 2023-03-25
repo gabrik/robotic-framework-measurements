@@ -161,7 +161,7 @@ while getopts "iobzrRmk" arg; do
          INTERVAL=$(bc -l <<< "1/$MSGS")
          LOG_FILE="$OUT_DIR/zenoh-latency-$MSGS-$TS.csv"
          echo "framework,test,metric,value,unit" > $LOG_FILE
-         timeout $DURATION nice $NICE taskset -c $CPUS $BIN_DIR/$ZENOH_PING -i $INTERVAL -m peer --listen $LISTEN --connect $CONNECT  -p 64 >> $LOG_FILE 2> /dev/null
+         timeout $DURATION nice $NICE taskset -c $CPUS $BIN_DIR/$ZENOH_PING -i $INTERVAL -m peer --listen $LISTEN --connect $CONNECT >> $LOG_FILE 2> /dev/null
          plog "[ DONE ] Running Zenoh ping msg/s $MSGS, logged to $LOG_FILE"
          ;;
       2)
