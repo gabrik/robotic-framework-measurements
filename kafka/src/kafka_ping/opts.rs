@@ -3,7 +3,7 @@ use clap::{Parser, ValueEnum};
 use kafka_test::{KeyVal, DEFAULT_PING_TOPIC, DEFAULT_PONG_TOPIC};
 use std::time::Duration;
 
-#[derive(Parser)]
+#[derive(Parser, Clone)]
 pub struct Opts {
     #[clap(long, default_value_t = DEFAULT_PING_TOPIC.to_string())]
     pub ping_topic: String,
