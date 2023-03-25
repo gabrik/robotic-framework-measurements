@@ -38,10 +38,10 @@ PI_WIFI_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\"?><CycloneDDS xm
 JETSON_WIFI_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\"?><CycloneDDS xmlns=\"https://cdds.io/config\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd\"><Domain id=\"any\"><General><NetworkInterfaceAddress>wlan0</NetworkInterfaceAddress></General></Domain></CycloneDDS>"
 LAPTOP_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\"?><CycloneDDS xmlns=\"https://cdds.io/config\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd\"><Domain id=\"any\"><General><NetworkInterfaceAddress>enp0s8</NetworkInterfaceAddress></General></Domain></CycloneDDS>"
 
-PI4="ubuntu@192.168.86.21"
-LAPTOP="192.168.86.76"
-JETSON="192.168.86.160"
+PI4="ubuntu@192.168.1.126"
+LAPTOP="192.168.1.172"
+JETSON="192.168.1.66"
 
-LAPTOP_WIFI="192.168.1.176"
-PI4_WIFI="192.168.1.241"
-JETSON_WIFI="192.168.1.137"
+LAPTOP_WIFI="192.168.123.176"
+PI4_WIFI="192.168.123.241"
+JETSON_WIFI="192.168.123.137"
