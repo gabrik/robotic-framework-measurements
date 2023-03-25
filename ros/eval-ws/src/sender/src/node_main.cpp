@@ -20,10 +20,10 @@
 #include <chrono>
 #include <thread>
 
-void send_single(ato::ros_sender::Sender sender) {
-    std::this_thread::sleep_for(std::chrono::duration<int>(5));
-    sender.publish_message();
-}
+// void send_single(ato::ros_sender::Sender sender) {
+//     std::this_thread::sleep_for(std::chrono::duration<int>(5));
+//     sender.publish_message();
+// }
 
 
 int main(int argc, char **argv) {
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 
     auto sender = ato::ros_sender::Sender(msgs, nh);
 
-    std::thread t1(send_single, sender);
+    // std::thread t1(send_single, sender);
 
     while(nh.ok()) {
         ros::spin();

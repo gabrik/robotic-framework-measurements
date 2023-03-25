@@ -28,13 +28,12 @@ Sender::Sender(const uint64_t msgs, ros::NodeHandle &nh) {
     this->publisher = this->nh.advertise<eval_interfaces::Evaluation>("ping", 1024);
     this->subscriber = this->nh.subscribe("pong", 1000, &Sender::receiver_callback, this);
 
-
-    timer = this->create_wall_timer(this->pace, std::bind(&Sender::publish_message, this));
+    this->timer = nh.createTimer(ros::Duration(this->printable_pace), &Sender::publish_message, this);
 
     // ROS_INFO("Init sender msg/s %ld", msgs);
 }
 
-void Sender::publish_message() {
+void Sender::publish_message(const ros::TimerEvent& event) {
 
         eval_interfaces::Evaluation msg;
 

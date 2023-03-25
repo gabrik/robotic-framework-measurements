@@ -27,7 +27,7 @@ Sender::Sender(const uint64_t msgs) : rclcpp::Node("sender_node", rclcpp::NodeOp
     this->pace = std::chrono::duration<double>(this->printable_pace);
     this->publisher = this->create_publisher<eval_interfaces::msg::Evaluation>("ping", qos);
     this->subscriber = this->create_subscription<eval_interfaces::msg::Evaluation>("pong", qos, std::bind(&Sender::receiver_callback, this, std::placeholders::_1));
-    //this->timer = this->create_wall_timer(pace, std::bind(&Sender::publish_message, this));
+    this->timer = this->create_wall_timer(pace, std::bind(&Sender::publish_message, this));
 
     // RCLCPP_INFO(this->get_logger(), "Init Sender msg/s %d pace is %f", msgs, pace);
 
@@ -55,6 +55,6 @@ void Sender::receiver_callback(const eval_interfaces::msg::Evaluation::SharedPtr
     // <protocol>,[latency|througput],[interval|payload],<value>,<unit>
     std::cout << "ros2,latency," << this->printable_pace << "," << latency << ",us" << std::endl << std::flush;
 
-    std::this_thread::sleep_for(this->pace);
-    this->publish_message();
+    // std::this_thread::sleep_for(this->pace);
+    // this->publish_message();
 }
