@@ -83,6 +83,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         start = (struct timespec*) message->payload;
         u_int64_t elapsed = (now.tv_sec - start->tv_sec) * 1000000 + (now.tv_nsec - start->tv_nsec) / 1000;
         printf("mqtt,latency,%.10f,%ld,us\n", interveal, elapsed);
+        fflush(stdout);
 
         // pthread_mutex_lock(&ping_info.lock);
 

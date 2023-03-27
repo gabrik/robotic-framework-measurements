@@ -331,7 +331,7 @@ while getopts "hzrRmk" arg; do
                 ./run-single-process.sh -bm
             "
             MASTER_PID=$!
-            sleep 3
+            sleep 10
 
             plog "[ START ] MQTT Starting MQTT pong"
             ssh -f $M_PONG "
