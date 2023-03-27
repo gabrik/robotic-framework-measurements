@@ -25,8 +25,8 @@ Sender::Sender(const uint64_t msgs, ros::NodeHandle &nh) {
     this->nh = nh;
     this->printable_pace = 1.0/double(msgs);
     this->pace = std::chrono::duration<double>(this->printable_pace);
-    this->publisher = this->nh.advertise<eval_interfaces::Evaluation>("ping", 1024);
-    this->subscriber = this->nh.subscribe("pong", 1000, &Sender::receiver_callback, this);
+    this->publisher = this->nh.advertise<eval_interfaces::Evaluation>("ping", 0);
+    this->subscriber = this->nh.subscribe("pong", 0, &Sender::receiver_callback, this);
 
     this->timer = nh.createTimer(ros::Duration(this->printable_pace), &Sender::publish_message, this);
 

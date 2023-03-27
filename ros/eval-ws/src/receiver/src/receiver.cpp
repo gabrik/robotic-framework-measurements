@@ -26,7 +26,7 @@ using ato::ros_receiver::Receiver;
 Receiver::Receiver(const std::string topic_name,ros::NodeHandle &nh) {
     this->nh = nh;
     this->subscriber = this->nh.subscribe(topic_name,1024, &Receiver::receiver_callback, this);
-    this->publisher = this->nh.advertise<eval_interfaces::Evaluation>("pong", 1024);
+    this->publisher = this->nh.advertise<eval_interfaces::Evaluation>("pong", 0);
 
     // RCLCPP_INFO(this->get_logger(), "Init Receiver with msg/s %d, pipeline lenght is %d, topic name is %s", this->msgs,  this->pipeline_length, topic_name.c_str());
 
