@@ -17,7 +17,7 @@
 #include "receiver/receiver.hpp"
 #include <atomic>
 
-#define QUEUE_LENGTH 1
+#define QUEUE_LENGTH 0
 
 using ato::ros_receiver::Receiver;
 

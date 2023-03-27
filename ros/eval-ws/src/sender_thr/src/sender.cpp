@@ -16,7 +16,7 @@
 #include "eval_interfaces/Thr.h"
 #include "sender/sender.hpp"
 
-#define QUEUE_LENGTH 1
+#define QUEUE_LENGTH 0
 
 using ato::ros_sender::Sender;
 
