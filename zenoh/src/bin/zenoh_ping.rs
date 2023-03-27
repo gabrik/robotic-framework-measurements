@@ -100,12 +100,12 @@ fn main() {
     // let mut data = Vec::with_capacity(20);
 
     loop {
-        let lat_data = LatData{ts: get_epoch_ns()};
+        let lat_data = LatData{ts: get_epoch_us()};
         // bincode::serialize_into(&mut data, &lat_data).unwrap();
         let data = bincode::serialize(&lat_data).unwrap();
-        std::thread::sleep(sleep_interval);
         // let instant = Instant::now();
         publisher.put(&*data).res().unwrap();
+        std::thread::sleep(sleep_interval);
 
         // let _ = sub.recv();
         // // <protocol>,[latency|througput],[interval|payload],<value>,<unit>
@@ -120,21 +120,21 @@ fn receiving(session : Arc<zenoh::Session>, interval: f64) {
 
     loop {
         let msg = sub.recv().unwrap();
+        let now = get_epoch_us();
         let data = bincode::deserialize::<LatData>(&msg.value.payload.contiguous()).unwrap();
-        let now = get_epoch_ns();
         let elapsed = now - data.ts;
 
         // <protocol>,[latency|througput],[interval|payload],<value>,<unit>
-        println!("zenoh,latency,{},{},ns", interval, elapsed / 2);
+        println!("zenoh,latency,{},{},us", interval, elapsed / 2);
     }
 
 }
 
-pub fn get_epoch_ns() -> u128 {
+pub fn get_epoch_us() -> u128 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
-        .as_nanos()
+        .as_micros()
 }
 
 

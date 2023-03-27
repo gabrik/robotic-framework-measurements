@@ -1,10 +1,10 @@
 mod opts;
 
-use anyhow::{anyhow, ensure, Context, Result};
+use anyhow::{anyhow, Result}; // ensure, Context,
 use clap::Parser;
 use kafka_test::{AsyncStdFutureProducer, AsyncStdStreamConsumer, DEFAULT_GROUP_ID};
 use log::{error, info, trace};
-use once_cell::sync::Lazy;
+// use once_cell::sync::Lazy;
 use opts::Opts;
 use rdkafka::{
     consumer::Consumer, error::KafkaError, producer::FutureRecord, types::RDKafkaErrorCode,
@@ -16,14 +16,14 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-static SINCE: Lazy<SystemTime> = Lazy::new(SystemTime::now);
-const MIN_PAYLOAD_SIZE: usize = 16;
+// static SINCE: Lazy<SystemTime> = Lazy::new(SystemTime::now);
+// const MIN_PAYLOAD_SIZE: usize = 16;
 
-struct PayloadInfo {
-    pub ping_id: u32,
-    pub msg_idx: u32,
-    pub rtt: Duration,
-}
+// struct PayloadInfo {
+//     pub ping_id: u32,
+//     pub msg_idx: u32,
+//     pub rtt: Duration,
+// }
 
 #[async_std::main]
 async fn main() -> Result<()> {
@@ -58,7 +58,8 @@ async fn run_latency_benchmark(opts: Opts) -> Result<()> {
     Ok(())
 }
 
-fn generate_payload(size: usize, ping_id: u32, msg_idx: u32) -> Vec<u8> {
+fn generate_payload() -> Vec<u8> {
+// fn generate_payload(size: usize, ping_id: u32, msg_idx: u32) -> Vec<u8> {
     // assert!(
     //     size >= MIN_PAYLOAD_SIZE,
     //     "The minimum payload size is {} bytes",
@@ -77,14 +78,14 @@ fn generate_payload(size: usize, ping_id: u32, msg_idx: u32) -> Vec<u8> {
     // payload[4..8].copy_from_slice(&msg_idx_bytes);
     // payload[8..16].copy_from_slice(&time_bytes);
     // payload
-    let lat_data = LatData{ts: get_epoch_ns()};
+    let lat_data = LatData{ts: get_epoch_us()};
     bincode::serialize(&lat_data).unwrap()
 }
 
-fn parse_payload(payload: &[u8], expect_payload_size: usize) -> u128 {//Result<PayloadInfo> {
+fn parse_payload(payload: &[u8]) -> u128 { //, expect_payload_size: usize) -> u128 {//Result<PayloadInfo> {
 
     let data = bincode::deserialize::<LatData>(&payload).unwrap();
-    let now = get_epoch_ns();
+    let now = get_epoch_us();
     let elapsed = now - data.ts;
     elapsed
     // let payload_size = payload.len();
@@ -180,7 +181,8 @@ async fn send(
     msg_idx: u32,
 ) -> Result<()> {
     let record_key = ping_id.to_le_bytes();
-    let payload = generate_payload(opts.payload_size, ping_id, msg_idx);
+    // let payload = generate_payload(opts.payload_size, ping_id, msg_idx);
+    let payload = generate_payload();
     let record = FutureRecord::to(&opts.ping_topic)
         .payload(&payload)
         .key(&record_key);
@@ -234,14 +236,14 @@ async fn recv(
             //     info.ping_id,
             //     info.msg_idx
             // );
-            let rtt = parse_payload(payload, opts.payload_size);
+            let rtt = parse_payload(payload);//, opts.payload_size);
             // ensure!(
             //     info.ping_id == ping_id,
             //     "Ignore the payload from a foreign ping ID {}",
             //     info.ping_id
             // );
             // <protocol>,[lantecy|througput],[interval|payload],<value>,<unit>
-            println!("kafka,latency,{},{},ns", opts.interval, rtt);
+            println!("kafka,latency,{},{},us", opts.interval, rtt);
 
             Ok(true)
         }
@@ -263,11 +265,11 @@ async fn recv(
 }
 
 
-pub fn get_epoch_ns() -> u128 {
+pub fn get_epoch_us() -> u128 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
-        .as_nanos()
+        .as_micros()
 }
 
 
