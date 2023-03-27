@@ -150,6 +150,9 @@ def mask_first_and_last(x):
 def prepare(log_dir, kind):
     log = read_log(log_dir)
 
+    fws = log['framework'].unique()
+    print(f'Just read Frameworks: {fws}')
+
     # filtering by kind of test
     log = log[log['test']==kind]
 
@@ -178,6 +181,10 @@ def prepare(log_dir, kind):
     log['counter'] = log.groupby(['framework', 'test','metric'])['framework'].cumcount().add(1)
 
     log = log.reset_index()
+
+    fws = log['framework'].unique()
+    print(f' done prepare Frameworks: {fws}')
+
     return log
 
 def filter(log, framework=None):

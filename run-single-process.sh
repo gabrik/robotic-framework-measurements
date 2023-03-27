@@ -108,7 +108,7 @@ while getopts "iobzrRmk" arg; do
          plog "[ RUN ] Running Kafka ping with msg/s $MSGS"
          INTERVAL=$(bc -l <<< "1/$MSGS")
          LOG_FILE="$OUT_DIR/kafka-latency-$MSGS-$TS.csv"
-         #echo "framework,test,metric,value,unit" > $LOG_FILE
+         echo "framework,test,metric,value,unit" > $LOG_FILE
          timeout $DURATION nice $NICE taskset -c $CPUS $BIN_DIR/$KAFKA_PING -i $INTERVAL -b $CONNECT -p 64 >> $LOG_FILE 2> /dev/null
          plog "[ DONE ] Running Kafka ping msg/s $MSGS, logged to $LOG_FILE"
          ;;
