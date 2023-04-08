@@ -160,9 +160,9 @@ def prepare(log_dir, kind):
     log['value'] = pd.to_numeric(log['value'], errors='coerce')
     log['metric'] = pd.to_numeric(log['metric'], errors='coerce')
 
-    mask = log.groupby(['framework','test','metric']).transform(mask_first_and_last)['value']
+    # mask = log.groupby(['framework','test','metric']).transform(mask_first_and_last)['value']
 
-    log = log.loc[mask]
+    # log = log.loc[mask]
 
     if kind == 'latency':
         # this converts everything to seconds, data is expected as micro seconds
