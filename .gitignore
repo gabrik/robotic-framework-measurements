@@ -6,3 +6,4 @@ Cargo.lock
 **/install
 **/build
 **/devel
+*.tar.gz

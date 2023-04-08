@@ -100,8 +100,20 @@ def interval_label(n):
     if n == 1/10:
         return "10"
 
+    if n == 1/30:
+        return "30"
+
+    if n == 1/60:
+        return "60"
+
     if n == 1/100:
         return "100"
+
+    if n == 1/120:
+        return "120"
+
+    if n == 1/500:
+        return "500"
 
     if n == 1/1000:
         return "1 K"
@@ -115,7 +127,7 @@ def interval_label(n):
     if n == 1/1000000:
         return "1 M"
 
-    return "1 M"
+    return f'{int(round(1/n,-1))}'
 
 
 def convert_value(line):
@@ -320,8 +332,8 @@ def latency_stat_plot(log, scale, outfile):
     plt.ylabel('RTT (seconds)')
     plt.legend(title='Legend', loc='center left', bbox_to_anchor=(1.0, 0.5))
 
-    ticker = mpl.ticker.EngFormatter(unit='')
-    axes.yaxis.set_major_formatter(ticker)
+    # ticker = mpl.ticker.EngFormatter(unit='')
+    # axes.yaxis.set_major_formatter(ticker)
 
     plt.tight_layout()
     fig.savefig(IMG_DIR.joinpath(outfile))

@@ -43,6 +43,7 @@ PI4_ETH_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\"?><CycloneDDS xm
 
 
 PI4="ubuntu@192.168.86.21"
+PI4_CABLE_IP="192.168.86.21"
 LAPTOP="192.168.86.76"
 JETSON="192.168.86.160"
 
