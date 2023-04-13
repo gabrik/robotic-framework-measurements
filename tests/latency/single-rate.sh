@@ -219,7 +219,7 @@ while getopts "hzrRmk" arg; do
 
         wait $PONG_PID
 
-        rsync -azv "$RO2_PING:~/$WORKING_DIR/$PERF_DIR/logs/*.csv" $TEST_LOGS/
+        rsync -azv "$ROS2_PING:~/$WORKING_DIR/$PERF_DIR/logs/*.csv" $TEST_LOGS/
 
         plog "[ DONE ] ROS2 Done testing for $s msg/s"
 
