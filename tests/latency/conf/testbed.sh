@@ -41,6 +41,10 @@ JETSON_ETH_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\"?><CycloneDDS
 LAPTOP_ETH_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\"?><CycloneDDS xmlns=\"https://cdds.io/config\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd\"><Domain id=\"any\"><General><NetworkInterfaceAddress>enp0s3</NetworkInterfaceAddress></General></Domain></CycloneDDS>"
 PI4_ETH_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\"?><CycloneDDS xmlns=\"https://cdds.io/config\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd\"><Domain id=\"any\"><General><NetworkInterfaceAddress>eth0</NetworkInterfaceAddress></General></Domain></CycloneDDS>"
 
+PI_WIFI6_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\"?><CycloneDDS xmlns=\"https://cdds.io/config\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd\"><Domain id=\"any\"><General><NetworkInterfaceAddress>wlan0</NetworkInterfaceAddress></General></Domain></CycloneDDS>"
+MINIPC_WIFI6_CYCLONEDDS_URI="<?xml version=\"1.0\" encoding=\"UTF-8\"?><CycloneDDS xmlns=\"https://cdds.io/config\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd\"><Domain id=\"any\"><General><NetworkInterfaceAddress>wlan0</NetworkInterfaceAddress></General></Domain></CycloneDDS>"
+
+
 
 PI4="ubuntu@192.168.86.21"
 PI4_CABLE_IP="192.168.86.21"
@@ -57,3 +61,7 @@ MINIPC="netcom@163.117.139.225"
 UNIPI4_MMWAVE="192.168.2.100"
 MINIPC_MMWAVE="192.168.1.100"
 
+UNIPI42="ubuntu@163.117.139.67"
+
+PI_WIFI6="192.168.1.200"
+MINIPC_WIFI6="192.168.1.100"
