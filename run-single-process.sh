@@ -108,7 +108,7 @@ while getopts "iobzrRmk" arg; do
          plog "[ RUN ] Running Kafka ping with msg/s $MSGS"
          INTERVAL=$(bc -l <<< "1/$MSGS")
          LOG_FILE="$OUT_DIR/kafka-latency-$MSGS-$TS.csv"
-         echo "framework,test,metric,value,unit" > $LOG_FILE
+         echo "framework,test,metric,value,unit,ts" > $LOG_FILE
          timeout $DURATION nice $NICE taskset -c $CPUS $BIN_DIR/$KAFKA_PING -i $INTERVAL -b $CONNECT -p 64 >> $LOG_FILE 2> /dev/null
          plog "[ DONE ] Running Kafka ping msg/s $MSGS, logged to $LOG_FILE"
          ;;
@@ -134,7 +134,7 @@ while getopts "iobzrRmk" arg; do
          plog "[ RUN ] Running MQTT ping with msg/s $MSGS"
          INTERVAL=$(bc -l <<< "1/$MSGS")
          LOG_FILE="$OUT_DIR/mqtt-latency-$MSGS-$TS.csv"
-         echo "framework,test,metric,value,unit" > $LOG_FILE
+         echo "framework,test,metric,value,unit,ts" > $LOG_FILE
          timeout $DURATION nice $NICE taskset -c $CPUS $MQTT_COMPARISON_DIR/$MQTT_PING -i $INTERVAL -b $CONNECT  -p 64 >> $LOG_FILE 2> /dev/null
          plog "[ DONE ] Running MQTT ping msg/s $MSGS, logged to $LOG_FILE"
          ;;
@@ -160,7 +160,7 @@ while getopts "iobzrRmk" arg; do
          plog "[ RUN ] Running Zenoh ping with msg/s $MSGS"
          INTERVAL=$(bc -l <<< "1/$MSGS")
          LOG_FILE="$OUT_DIR/zenoh-latency-$MSGS-$TS.csv"
-         echo "framework,test,metric,value,unit" > $LOG_FILE
+         echo "framework,test,metric,value,unit,ts" > $LOG_FILE
          timeout $DURATION nice $NICE taskset -c $CPUS $BIN_DIR/$ZENOH_PING -i $INTERVAL -m peer --listen $LISTEN --connect $CONNECT >> $LOG_FILE 2> /dev/null
          plog "[ DONE ] Running Zenoh ping msg/s $MSGS, logged to $LOG_FILE"
          ;;
@@ -193,7 +193,7 @@ while getopts "iobzrRmk" arg; do
       1)
          plog "[ RUN ] Running ROS2 ping with msg/s $MSGS"
          LOG_FILE="$OUT_DIR/ros2-latency-$MSGS-$TS.csv"
-         echo "framework,test,metric,value,unit" > $LOG_FILE
+         echo "framework,test,metric,value,unit,ts" > $LOG_FILE
          timeout $DURATION nice $NICE taskset -c $CPUS $ROS2_PING $MSGS >> $LOG_FILE 2> /dev/null
          plog "[ DONE ] Running ROS2 ping with msg/s $MSGS"
          ps -ax | grep sender_ros | awk {'print $1'} | xargs kill -9 > /dev/null  2>&1
@@ -223,7 +223,7 @@ while getopts "iobzrRmk" arg; do
       1)
          plog "[ RUN ] Running ROS ping with msg/s $MSGS"
          LOG_FILE="$OUT_DIR/ros-latency-$MSGS-$TS.csv"
-         echo "framework,test,metric,value,unit" > $LOG_FILE
+         echo "framework,test,metric,value,unit,ts" > $LOG_FILE
          timeout $DURATION nice $NICE taskset -c $CPUS $ROS_BIN_DIR/$ROS_PING $MSGS >> $LOG_FILE 2> /dev/null
          plog "[ DONE ] Running ROS source with msg/s $MSGS"
          ps -ax | grep sender_node | awk {'print $1'} | xargs kill -9 > /dev/null 2>&1

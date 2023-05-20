@@ -82,12 +82,12 @@ fn generate_payload() -> Vec<u8> {
     bincode::serialize(&lat_data).unwrap()
 }
 
-fn parse_payload(payload: &[u8]) -> u128 { //, expect_payload_size: usize) -> u128 {//Result<PayloadInfo> {
+fn parse_payload(payload: &[u8]) -> (u128,u128) { //, expect_payload_size: usize) -> u128 {//Result<PayloadInfo> {
 
     let data = bincode::deserialize::<LatData>(&payload).unwrap();
     let now = get_epoch_us();
     let elapsed = now - data.ts;
-    elapsed
+    (now, elapsed)
     // let payload_size = payload.len();
     // ensure!(
     //     payload_size >= MIN_PAYLOAD_SIZE,
@@ -236,14 +236,14 @@ async fn recv(
             //     info.ping_id,
             //     info.msg_idx
             // );
-            let rtt = parse_payload(payload);//, opts.payload_size);
+            let (now, rtt) = parse_payload(payload);//, opts.payload_size);
             // ensure!(
             //     info.ping_id == ping_id,
             //     "Ignore the payload from a foreign ping ID {}",
             //     info.ping_id
             // );
-            // <protocol>,[lantecy|througput],[interval|payload],<value>,<unit>
-            println!("kafka,latency,{},{},us", opts.interval, rtt);
+            // <protocol>,[lantecy|througput],[interval|payload],<value>,<unit>,<ts>
+            println!("kafka,latency,{},{},us,{}", opts.interval, rtt, now);
 
             Ok(true)
         }

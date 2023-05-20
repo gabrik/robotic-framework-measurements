@@ -47,11 +47,11 @@ void Sender::publish_message(const ros::TimerEvent& event) {
 }
 
 void Sender::receiver_callback(const eval_interfaces::Evaluation::ConstPtr& msg){
-     auto ts = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    auto ts = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     auto latency = ts - msg->emitter_ts;
 
-    // <protocol>,[latency|througput],[interval|payload],<value>,<unit>
-    std::cout << "ros,latency," << this->printable_pace << "," << latency << ",us" << std::endl << std::flush;
+    // <protocol>,[latency|througput],[interval|payload],<value>,<unit>,<timestamp>
+    std::cout << "ros,latency," << this->printable_pace << "," << latency << ",us," << ts << std::endl << std::flush;
 
     // std::this_thread::sleep_for(this->pace);
     // this->publish_message();

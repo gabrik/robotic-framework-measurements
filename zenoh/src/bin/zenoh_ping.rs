@@ -124,8 +124,8 @@ fn receiving(session : Arc<zenoh::Session>, interval: f64) {
         let data = bincode::deserialize::<LatData>(&msg.value.payload.contiguous()).unwrap();
         let elapsed = now - data.ts;
 
-        // <protocol>,[latency|througput],[interval|payload],<value>,<unit>
-        println!("zenoh,latency,{},{},us", interval, elapsed / 2);
+        // <protocol>,[latency|througput],[interval|payload],<value>,<unit>,<ts>
+        println!("zenoh,latency,{},{},us,{}", interval, elapsed / 2, now);
     }
 
 }

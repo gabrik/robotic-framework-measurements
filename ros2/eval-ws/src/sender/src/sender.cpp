@@ -52,8 +52,8 @@ void Sender::receiver_callback(const eval_interfaces::msg::Evaluation::SharedPtr
     auto latency = ts - msg->emitter_ts;
     // RCLCPP_INFO(this->get_logger(), "Receiver!, %ul - %ul = %dus", msg->emitter_ts, ts, latency);
 
-    // <protocol>,[latency|througput],[interval|payload],<value>,<unit>
-    std::cout << "ros2,latency," << this->printable_pace << "," << latency << ",us" << std::endl << std::flush;
+    // <protocol>,[latency|througput],[interval|payload],<value>,<unit>, <timestamp>
+    std::cout << "ros2,latency," << this->printable_pace << "," << latency << ",us," << ts << std::endl << std::flush;
 
     // std::this_thread::sleep_for(this->pace);
     // this->publish_message();

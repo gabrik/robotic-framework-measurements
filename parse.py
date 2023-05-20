@@ -32,8 +32,8 @@ palette_medians = {
 
 
 styles = {
-    'single': (0,0),
-    'multi': (1,1),
+    'rtt': (0,0),
+    'jitter': (1,1),
 }
 
 labels = ['Zenoh','ROS' ,'ROS 2', 'Kafka', 'MQTT']
@@ -158,7 +158,6 @@ def mask_first_and_last(x):
     mask[-1] = False
     return mask
 
-
 def prepare(log_dir, kind):
     log = read_log(log_dir)
 
@@ -166,7 +165,7 @@ def prepare(log_dir, kind):
     print(f'Just read Frameworks: {fws}')
 
     # filtering by kind of test
-    log = log[log['test']==kind]
+    log = log[log['test'] == kind]
 
     # log['value'] = log['value'].astype(int, errors='ignore')
     log['value'] = pd.to_numeric(log['value'], errors='coerce')
@@ -176,15 +175,6 @@ def prepare(log_dir, kind):
 
     # log = log.loc[mask]
 
-    if kind == 'latency':
-        # this converts everything to seconds, data is expected as micro seconds
-        log['value']= log.apply(convert_value, axis=1)
-        log = log[log['value']>pow(10,-9)]
-        log['label'] = [interval_label(v) for k, v in log['metric'].iteritems()]
-        log.sort_values(by='metric', inplace=True,ascending=False)
-    elif kind == 'throughput':
-        log['label'] = [bytes_label(v) for k, v in log['metric'].iteritems()]
-        log.sort_values(by='metric', inplace=True,ascending=False)
 
 
     log['framework'] = log['framework'].astype(str)
@@ -195,9 +185,35 @@ def prepare(log_dir, kind):
     log = log.reset_index()
 
     fws = log['framework'].unique()
-    print(f' done prepare Frameworks: {fws}')
+    print(f'Frameworks: {fws}')
 
-    return log
+    new_log = pd.DataFrame()
+    for fw in fws:
+        log_proto = log[log["framework"] == fw]
+        log_proto = log_proto.sort_values(by=['ts'])
+        log_proto['jitter'] = log_proto.groupby('metric')['ts'].diff().fillna(0)
+
+        # filtering out 0 jitter values (first messages)
+        log_proto = log_proto[log_proto["jitter"] > 0]
+
+        log_proto = log_proto.melt(id_vars=["framework", "test", "metric", "unit"], value_vars=["value", "jitter"], value_name="value", var_name="kind")
+        new_log = new_log.append(log_proto)
+
+    new_log = new_log.reset_index()
+
+
+    if kind == 'latency':
+        # this converts everything to seconds, data is expected as micro seconds
+        new_log['value']= log.apply(convert_value, axis=1)
+        new_log = new_log[new_log['value']>pow(10,-9)]
+        new_log['label'] = [interval_label(v) for k, v in new_log['metric'].iteritems()]
+        new_log.sort_values(by='metric', inplace=True,ascending=False)
+    elif kind == 'throughput':
+        new_log['label'] = [bytes_label(v) for k, v in new_log['metric'].iteritems()]
+        new_log.sort_values(by='metric', inplace=True,ascending=False)
+
+    return new_log
+
 
 def filter(log, framework=None):
     layers = log['framework'].unique()
@@ -318,7 +334,8 @@ def latency_stat_plot(log, scale, outfile):
 
     g = sns.lineplot(data=log, x='label', y='value', palette=palette,
                 ci=95, err_style='band', hue='framework',
-                estimator=np.median,)
+                estimator=np.median,
+                style="kind")
 
     if scale == 'log':
         g.set_yscale('log')
