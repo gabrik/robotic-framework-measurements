@@ -12,14 +12,15 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 use clap::Parser;
+use rand::Rng;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use std::time::Duration;
 use std::sync::Arc;
-use zenoh::config::Config;
-use zenoh::prelude::{sync::*, CongestionControl};
-use zenoh_config::{EndPoint, WhatAmI};
+use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
-use serde::{Serialize, Deserialize};
+use zenoh::config::Config;
+use zenoh::prelude::{sync::*, CongestionControl, Priority};
+use zenoh_config::{EndPoint, WhatAmI};
 
 #[derive(Debug, Parser)]
 #[clap(name = "zenoh_ping")]
@@ -38,6 +39,13 @@ struct Opt {
     #[clap(short, long)]
     interval: f64,
 
+    /// qos to be used (0-7)
+    #[clap(short, long)]
+    qos: u8,
+
+    /// message size (bytes)
+    #[clap(short, long)]
+    size: usize,
     /// configuration file (json5 or yaml)
     #[clap(long = "conf", value_parser)]
     config: Option<PathBuf>,
@@ -82,25 +90,25 @@ fn main() {
     // The key expression to wait the response back
 
     let c_session = session.clone();
-    std::thread::spawn(move || {receiving(c_session.clone(), opt.interval)});
+    std::thread::spawn(move || receiving(c_session.clone(), opt.interval, opt.qos, opt.size));
 
     let publisher = session
         .declare_publisher(key_expr_ping)
         .congestion_control(CongestionControl::Block)
+        .priority(Priority::try_from(opt.qos).unwrap())
         .res()
         .unwrap();
 
-    // let data: Value = (0usize..opt.payload)
-    //     .map(|i| (i % 10) as u8)
-    //     .collect::<Vec<u8>>()
-    //     .into();
-
     let sleep_interval = Duration::from_secs_f64(opt.interval);
 
-    // let mut data = Vec::with_capacity(20);
+    let mut rng = rand::thread_rng();
+    let data: Vec<u8> = (0..opt.size).map(|_| rng.gen_range(0..255)).collect();
 
     loop {
-        let lat_data = LatData{ts: get_epoch_us()};
+        let lat_data = LatData {
+            ts: get_epoch_us(),
+            payload: data.clone(),
+        };
         // bincode::serialize_into(&mut data, &lat_data).unwrap();
         let data = bincode::serialize(&lat_data).unwrap();
         // let instant = Instant::now();
@@ -113,8 +121,7 @@ fn main() {
     }
 }
 
-
-fn receiving(session : Arc<zenoh::Session>, interval: f64) {
+fn receiving(session: Arc<zenoh::Session>, interval: f64, qos: u8, size: usize) {
     let key_expr_pong = keyexpr::new("test/pong").unwrap();
     let sub = session.declare_subscriber(key_expr_pong).res().unwrap();
 
@@ -124,10 +131,16 @@ fn receiving(session : Arc<zenoh::Session>, interval: f64) {
         let data = bincode::deserialize::<LatData>(&msg.value.payload.contiguous()).unwrap();
         let elapsed = now - data.ts;
 
-        // <protocol>,[latency|througput],[interval|payload],<value>,<unit>,<ts>
-        println!("zenoh,latency,{},{},us,{}", interval, elapsed / 2, now);
+        // <protocol>,[latency|througput],[interval|payload],<value>,<unit>,<ts>,<size>,<qos>
+        println!(
+            "zenoh,latency,{},{},us,{},{},{}",
+            interval,
+            elapsed / 2,
+            now,
+            size,
+            qos
+        );
     }
-
 }
 
 pub fn get_epoch_us() -> u128 {
@@ -137,9 +150,8 @@ pub fn get_epoch_us() -> u128 {
         .as_micros()
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LatData {
     pub ts: u128,
+    pub payload: Vec<u8>,
 }
-

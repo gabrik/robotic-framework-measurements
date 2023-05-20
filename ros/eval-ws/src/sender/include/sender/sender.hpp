@@ -27,13 +27,15 @@ namespace ato {
                 ros::Publisher publisher;
                 ros::Subscriber subscriber;
                 std::chrono::duration<double> pace;
+                std::vector<uint8_t> data;
                 ros::Timer timer;
                 double printable_pace;
+                uint64_t size;
                 void receiver_callback(const eval_interfaces::Evaluation::ConstPtr& msg);
 
 
             public:
-                explicit Sender(const uint64_t msgs, ros::NodeHandle &nh);
+                explicit Sender(const uint64_t msgs, const uint64_t size, ros::NodeHandle &nh);
                 virtual ~Sender() {}
                 void publish_message(const ros::TimerEvent& event);
 

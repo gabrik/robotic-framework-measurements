@@ -35,3 +35,4 @@ async-std = { version = "=1.12.0", features = ["attributes", "unstable"] }
 rdkafka = { git = "https://github.com/fede1024/rust-rdkafka", features = ["naive-runtime"] }
 serde = "1.0.158"
 bincode = "1.3.3"
+rand = "0.8.5"

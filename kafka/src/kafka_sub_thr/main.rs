@@ -140,7 +140,11 @@ async fn measure(messages: Arc<AtomicUsize>, payload: usize) {
             let elapsed = timer.elapsed().as_micros() as f64;
             let c = messages.swap(0, Ordering::Relaxed);
             // <protocol>,[lantecy|througput],[interval|payload],<value>,<unit>
-            println!("kafka,througput,{},{:.3},msgs", payload, c as f64 * 1_000_000.0 / elapsed);
+            println!(
+                "kafka,througput,{},{:.3},msgs",
+                payload,
+                c as f64 * 1_000_000.0 / elapsed
+            );
             timer = Instant::now()
         }
     }

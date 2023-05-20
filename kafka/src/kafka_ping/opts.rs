@@ -21,6 +21,9 @@ pub struct Opts {
     pub interval: f64,
 
     #[clap(short, long)]
+    pub qos: u8,
+
+    #[clap(short, long)]
     pub payload_size: usize,
 
     #[clap(short = 'P', long)]

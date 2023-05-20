@@ -22,7 +22,7 @@ namespace ato {
         class Sender : public rclcpp::Node {
 
             public:
-                explicit Sender(const uint64_t msgs);
+                explicit Sender(const uint64_t msgs, const uint64_t size);
                 virtual ~Sender() {}
                 void publish_message();
 
@@ -31,6 +31,8 @@ namespace ato {
                 rclcpp::Subscription<eval_interfaces::msg::Evaluation>::SharedPtr subscriber;
                 rclcpp::TimerBase::SharedPtr timer;
                 std::chrono::duration<double> pace;
+                std::vector<uint8_t> data;
+                uint64_t size;
                 double printable_pace;
                 void receiver_callback(const eval_interfaces::msg::Evaluation::SharedPtr msg);
 

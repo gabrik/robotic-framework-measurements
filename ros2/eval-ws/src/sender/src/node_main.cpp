@@ -32,6 +32,10 @@ int main (int argc, char* argv[]) {
         .help("messages per second")
         .scan<'i', uint64_t>();
 
+    program.add_argument("size")
+        .help("message size")
+        .scan<'i', uint64_t>();
+
     try {
         program.parse_args(argc, argv);
     }
@@ -42,12 +46,13 @@ int main (int argc, char* argv[]) {
     }
 
     uint64_t msgs = program.get<uint64_t>("msgs");
+    uint64_t size = program.get<uint64_t>("size");
 
     rclcpp::init(argc, argv);
     rclcpp::executors::SingleThreadedExecutor executor;
 
 
-    auto sender = std::make_shared<ato::sender::Sender>(msgs);
+    auto sender = std::make_shared<ato::sender::Sender>(msgs, size);
     executor.add_node(sender);
 
     std::thread t1(send_single, sender);

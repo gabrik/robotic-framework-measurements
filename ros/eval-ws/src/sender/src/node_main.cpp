@@ -34,6 +34,10 @@ int main(int argc, char **argv) {
         .help("messages per second")
         .scan<'i', uint64_t>();
 
+    program.add_argument("size")
+        .help("message size")
+        .scan<'i', uint64_t>();
+
     try {
         program.parse_args(argc, argv);
     }
@@ -44,12 +48,13 @@ int main(int argc, char **argv) {
     }
 
     uint64_t msgs = program.get<uint64_t>("msgs");
+    uint64_t size = program.get<uint64_t>("size");
 
     ros::init(argc, argv, "sender");
 
     ros::NodeHandle nh;
 
-    auto sender = ato::ros_sender::Sender(msgs, nh);
+    auto sender = ato::ros_sender::Sender(msgs, size, nh);
 
     // std::thread t1(send_single, sender);
 
