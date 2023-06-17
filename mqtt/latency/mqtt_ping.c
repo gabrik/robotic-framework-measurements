@@ -47,9 +47,31 @@ struct ping_data ping_info;
 
 
 struct latency_data {
-    timeval ts;
+    struct timeval ts;
     size_t len;
-    uint8_t *payload;
+    u_int8_t *payload;
+};
+
+size_t serialize_data(struct latency_data data, void* buff) {
+    memcpy(buff, (void*) &data.ts, sizeof(struct timespec));
+    size_t i = sizeof(struct timespec);
+    memcpy(buff+i, (void*) &data.len, sizeof(size_t));
+
+    i += sizeof(size_t);
+
+    memcpy(buff+i, (void*) &data.payload, data.len);
+    i+=data.len;
+
+    return i;
+} 
+
+void deserialize_data(void* buff, struct latency_data* data) {
+    memcpy((void*) &data->ts, buff, sizeof(struct timeval));
+    size_t i = sizeof(struct timespec);
+    memcpy((void*) &data->len, buff+i, sizeof(size_t));
+    i += sizeof(size_t);
+    memcpy((void*) &data->payload, buff+i, data->len);
+
 }
 
 void onConnectFailure(void* context, MQTTAsync_failureData5* response)
@@ -77,20 +99,22 @@ void onSubscribeFailure(void* context, MQTTAsync_failureData5* response)
 
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *message)
-{
+{   
+    struct latency_data data;
     struct timespec now;
     struct timespec *start;
     if (strncmp(topicName, DEFAULT_PONG_TOPIC, topicLen) == 0 ) {
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &now);
-
+        deserialize_data(message->payload, &data);
 
         // deserialize the message
-        start = (struct timespec*) message->payload;
+        start = &data.ts;
+        //(struct timespec*) message->payload;
         u_int64_t elapsed = (now.tv_sec - start->tv_sec) * 1000000 + (now.tv_nsec - start->tv_nsec) / 1000;
         u_int64_t ts = (now.tv_sec * 1000000) + (now.tv_nsec / 1000);
-
-        printf("mqtt,latency,%.10f,%ld,us,%ld\n", interveal, elapsed, ts);
+        // <protocol>,[latency|througput],[interval|payload],<value>,<unit>, <timestamp>, <size>,<qos>
+        printf("mqtt,latency,%.10f,%ld,us,%ld,%ld,%d\n", interveal, elapsed, ts, data.len, QOS );
         fflush(stdout);
 
         // pthread_mutex_lock(&ping_info.lock);
@@ -116,7 +140,7 @@ int main(int argc, char* argv[])
     size_t payload = 64;
     char* broker = NULL;
     char* payload_value = NULL;
-    void* data = NULL;
+    void* payload_buff = NULL;
     char* name = NULL;
     char* scenario = NULL;
     char* interveal_value = NULL;
@@ -164,7 +188,7 @@ int main(int argc, char* argv[])
         interveal = (double) atof(interveal_value);
     }
 
-    data = (void*) calloc(sizeof(struct timespec),1);
+    //data = (void*) calloc(sizeof(struct timespec),1);
 
     create_opts.MQTTVersion = MQTTVERSION_5;
     if ((rc = MQTTAsync_createWithOptions(&client, broker, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL, &create_opts)) != MQTTASYNC_SUCCESS)
@@ -215,22 +239,23 @@ int main(int argc, char* argv[])
     ping_info.seq_num = 0;
 
 
-    latency_data data;
-    data.payload = (uint8_t*) calloc(payload);
+    struct latency_data data;
+    data.payload = (u_int8_t*) calloc(sizeof(u_int8_t), payload);
     data.len = payload;
 
     for(size_t i = 0; i<payload; i++){
-        data.payload[i] = (uint8_t) 0xFF;
+        data.payload[i] = (u_int8_t) 0xFF;
     }
 
     while (1) {
         usleep((useconds_t)(interveal * 1000000));
         MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
         clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-        memcpy(data.ts, (void *) &start, sizeof(struct timespec));
+        memcpy((void*)&data.ts, (void *) &start, sizeof(struct timespec));
 
-        pubmsg.payload = data;
-        pubmsg.payloadlen = (int) sizeof(struct latency_data) + (int) payload;
+        size_t wirelen = serialize_data(data, payload_buff);
+        pubmsg.payload = payload_buff;
+        pubmsg.payloadlen = (int) wirelen;
         pubmsg.qos = QOS;
         pubmsg.retained = 0;
 
@@ -260,8 +285,8 @@ int main(int argc, char* argv[])
 
     }
 
-
-
     MQTTAsync_destroy(&client);
     return rc;
 }
+
+
