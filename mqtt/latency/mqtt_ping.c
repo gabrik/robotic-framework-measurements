@@ -46,6 +46,12 @@ struct ping_data {
 struct ping_data ping_info;
 
 
+struct latency_data {
+    timeval ts;
+    size_t len;
+    uint8_t *payload;
+}
+
 void onConnectFailure(void* context, MQTTAsync_failureData5* response)
 {
     printf("Connect failed, rc %d\n", response ? response->code : 0);
@@ -208,14 +214,23 @@ int main(int argc, char* argv[])
     pthread_cond_init(&ping_info.cond, NULL);
     ping_info.seq_num = 0;
 
+
+    latency_data data;
+    data.payload = (uint8_t*) calloc(payload);
+    data.len = payload;
+
+    for(size_t i = 0; i<payload; i++){
+        data.payload[i] = (uint8_t) 0xFF;
+    }
+
     while (1) {
         usleep((useconds_t)(interveal * 1000000));
         MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
         clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-        memcpy(data, (void *) &start, sizeof(struct timespec));
+        memcpy(data.ts, (void *) &start, sizeof(struct timespec));
 
         pubmsg.payload = data;
-        pubmsg.payloadlen = (int) sizeof(struct timespec);
+        pubmsg.payloadlen = (int) sizeof(struct latency_data) + (int) payload;
         pubmsg.qos = QOS;
         pubmsg.retained = 0;
 
