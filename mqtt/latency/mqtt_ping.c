@@ -52,26 +52,51 @@ struct latency_data {
     u_int8_t *payload;
 };
 
-size_t serialize_data(struct latency_data data, void* buff) {
-    memcpy(buff, (void*) &data.ts, sizeof(struct timespec));
-    size_t i = sizeof(struct timespec);
-    memcpy(buff+i, (void*) &data.len, sizeof(size_t));
+// Function to serialize a `struct latency_data` into a byte array
+size_t serialize_latency_data(struct latency_data data, u_int8_t **buffer) {
+    size_t total_size = sizeof(struct timeval) + sizeof(size_t) + data.len;
+    *buffer = (u_int8_t *)malloc(total_size);
+    if (*buffer == NULL) {
+        return 0;  // Failed to allocate memory
+    }
+    
+    size_t offset = 0;
+    
+    // Copy the timeval structure
+    memcpy(*buffer + offset, &data.ts, sizeof(struct timeval));
+    offset += sizeof(struct timeval);
+    
+    // Copy the len field
+    memcpy(*buffer + offset, &data.len, sizeof(size_t));
+    offset += sizeof(size_t);
+    
+    // Copy the payload
+    memcpy(*buffer + offset, data.payload, data.len);
+    
+    return total_size;
+}
 
-    i += sizeof(size_t);
-
-    memcpy(buff+i, (void*) &data.payload, data.len);
-    i+=data.len;
-
-    return i;
-} 
-
-void deserialize_data(void* buff, struct latency_data* data) {
-    memcpy((void*) &data->ts, buff, sizeof(struct timeval));
-    size_t i = sizeof(struct timespec);
-    memcpy((void*) &data->len, buff+i, sizeof(size_t));
-    i += sizeof(size_t);
-    memcpy((void*) &data->payload, buff+i, data->len);
-
+// Function to deserialize a byte array into a `struct latency_data`
+struct latency_data deserialize_latency_data(u_int8_t *buffer, size_t buffer_size) {
+    struct latency_data data;
+    
+    size_t offset = 0;
+    
+    // Copy the timeval structure
+    memcpy(&data.ts, buffer + offset, sizeof(struct timeval));
+    offset += sizeof(struct timeval);
+    
+    // Copy the len field
+    memcpy(&data.len, buffer + offset, sizeof(size_t));
+    offset += sizeof(size_t);
+    
+    // Allocate memory for the payload and copy its data
+    data.payload = (u_int8_t *)malloc(data.len);
+    if (data.payload != NULL) {
+        memcpy(data.payload, buffer + offset, data.len);
+    }
+    
+    return data;
 }
 
 void onConnectFailure(void* context, MQTTAsync_failureData5* response)
@@ -100,13 +125,15 @@ void onSubscribeFailure(void* context, MQTTAsync_failureData5* response)
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *message)
 {   
-    struct latency_data data;
+    
     struct timespec now;
     struct timespec *start;
     if (strncmp(topicName, DEFAULT_PONG_TOPIC, topicLen) == 0 ) {
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &now);
-        deserialize_data(message->payload, &data);
+
+        struct latency_data data = deserialize_latency_data(message->payload, message->payloadlen);
+        //deserialize_data(message->payload, &data);
 
         // deserialize the message
         start = &data.ts;
@@ -140,7 +167,7 @@ int main(int argc, char* argv[])
     size_t payload = 64;
     char* broker = NULL;
     char* payload_value = NULL;
-    void* payload_buff = NULL;
+    u_int8_t* payload_buff = NULL;
     char* name = NULL;
     char* scenario = NULL;
     char* interveal_value = NULL;
@@ -252,8 +279,9 @@ int main(int argc, char* argv[])
         MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
         clock_gettime(CLOCK_MONOTONIC_RAW, &start);
         memcpy((void*)&data.ts, (void *) &start, sizeof(struct timespec));
+        
 
-        size_t wirelen = serialize_data(data, payload_buff);
+        size_t wirelen = serialize_latency_data(data, &payload_buff); //serialize_data(data, payload_buff);
         pubmsg.payload = payload_buff;
         pubmsg.payloadlen = (int) wirelen;
         pubmsg.qos = QOS;
